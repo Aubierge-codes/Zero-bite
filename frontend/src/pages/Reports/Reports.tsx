@@ -1,11 +1,12 @@
 import { Clock, BarChart2, FileText, Printer, Share2, Download, CheckSquare, Square, MapPin, Landmark } from 'lucide-react';
 import SixMonthTrendChart from '../../components/charts/SixMonthTrendChart';
+import styles from './Reports.module.css';
 
 export default function Reports() {
   return (
-    <div style={{ height: 'calc(100vh - 120px)', display: 'flex', gap: 'var(--spacing-xl)', margin: '-var(--spacing-xl)' }}>
+    <div className={styles.layout}>
       {/* Sidebar: Report Builder */}
-      <div style={{ width: '350px', borderRight: '1px solid var(--color-border)', padding: 'var(--spacing-xl)', overflowY: 'auto', backgroundColor: 'var(--color-surface)' }}>
+      <div className={styles.sidebar}>
          <div style={{ marginBottom: 'var(--spacing-xl)' }}>
             <h2 style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Reports &amp; Analytics</h2>
             <h1 style={{ fontSize: '1.75rem', margin: '0.25rem 0' }}>Custom Report Builder</h1>
@@ -75,13 +76,13 @@ export default function Reports() {
       </div>
 
       {/* Main Area: Document Preview */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 'var(--spacing-xl)', overflowY: 'auto', backgroundColor: '#F3F4F6' }}>
-         <div className="flex justify-between items-center" style={{ marginBottom: 'var(--spacing-lg)' }}>
+      <div className={styles.preview}>
+         <div className="page-header" style={{ marginBottom: 'var(--spacing-lg)' }}>
             <div>
                <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Document Preview</h2>
                <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>Live visualization of your generated export parameters.</p>
             </div>
-            <div className="flex gap-md">
+            <div className="flex gap-md" style={{ flexWrap: 'wrap' }}>
                <button className="btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'white' }}><Printer size={16} /> Print</button>
                <button className="btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'white' }}><Share2 size={16} /> Share</button>
                <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#10B981' }}><Download size={16} /> Export PDF</button>
@@ -90,8 +91,8 @@ export default function Reports() {
          </div>
 
          {/* Document Mockup */}
-         <div style={{ backgroundColor: 'white', padding: 'var(--spacing-2xl)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-md)', flex: 1, margin: '0 auto', width: '100%', maxWidth: '800px', border: '1px solid var(--color-border)' }}>
-            <div className="flex justify-between items-start" style={{ marginBottom: 'var(--spacing-2xl)', borderBottom: '2px solid var(--color-border)', paddingBottom: 'var(--spacing-lg)' }}>
+         <div className={styles.docMockup} style={{ backgroundColor: 'white', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-md)', flex: 1, margin: '0 auto', width: '100%', maxWidth: '800px', border: '1px solid var(--color-border)' }}>
+            <div className="flex justify-between items-start" style={{ marginBottom: 'var(--spacing-2xl)', borderBottom: '2px solid var(--color-border)', paddingBottom: 'var(--spacing-lg)', flexWrap: 'wrap', gap: 'var(--spacing-md)' }}>
                <div className="flex gap-md items-center">
                   <div style={{ width: '60px', height: '60px', borderRadius: '50%', border: '2px solid #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-secondary)' }}>
                      <Landmark size={26} />
