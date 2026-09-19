@@ -154,7 +154,7 @@ export default function NationalDashboard() {
 
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ fontSize: '0.7rem', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', textAlign: 'left' }}>
+              <tr style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', textAlign: 'left' }}>
                 <th style={{ paddingBottom: '0.5rem', fontWeight: 600 }}>District</th>
                 <th style={{ paddingBottom: '0.5rem', fontWeight: 600 }}>Risk Score</th>
                 <th style={{ paddingBottom: '0.5rem', fontWeight: 600 }}>Hazard Type</th>
