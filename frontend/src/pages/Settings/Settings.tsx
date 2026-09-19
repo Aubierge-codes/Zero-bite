@@ -1,5 +1,13 @@
 import { Users, Smartphone, Activity, List, Globe, Search, Plus, ShieldCheck, Download, Phone, Settings as SettingsIcon } from 'lucide-react';
 
+const tabs = [
+  { label: 'Users', icon: Users },
+  { label: 'SMS Gateway', icon: Smartphone },
+  { label: 'Thresholds', icon: Activity },
+  { label: 'Audit Log', icon: List },
+  { label: 'Localization', icon: Globe },
+];
+
 export default function Settings() {
   const users = [
     { name: 'Jean-Pierre Kabera', role: 'Ministry', district: 'National', status: 'Active', lastActive: '2 mins ago' },
@@ -18,11 +26,22 @@ export default function Settings() {
       </div>
 
       <div style={{ display: 'flex', borderBottom: '1px solid var(--color-border)', marginBottom: 'var(--spacing-xl)' }}>
-         <button style={{ padding: 'var(--spacing-md) var(--spacing-xl)', borderBottom: '2px solid var(--color-primary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Users size={16} /> Users</button>
-         <button style={{ padding: 'var(--spacing-md) var(--spacing-xl)', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Smartphone size={16} /> SMS Gateway</button>
-         <button style={{ padding: 'var(--spacing-md) var(--spacing-xl)', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Activity size={16} /> Thresholds</button>
-         <button style={{ padding: 'var(--spacing-md) var(--spacing-xl)', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><List size={16} /> Audit Log</button>
-         <button style={{ padding: 'var(--spacing-md) var(--spacing-xl)', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Globe size={16} /> Localization</button>
+         {tabs.map(({ label, icon: Icon }, i) => (
+            <button
+               key={label}
+               style={{
+                  padding: 'var(--spacing-md) var(--spacing-xl)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  borderBottom: i === 0 ? '2px solid var(--color-primary)' : '2px solid transparent',
+                  fontWeight: i === 0 ? 600 : 400,
+                  color: i === 0 ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+               }}
+            >
+               <Icon size={16} /> {label}
+            </button>
+         ))}
       </div>
 
       <div className="card" style={{ padding: 0, overflow: 'hidden', marginBottom: 'var(--spacing-2xl)' }}>
