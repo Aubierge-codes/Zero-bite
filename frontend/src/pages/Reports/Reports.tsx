@@ -1,4 +1,5 @@
 import { Clock, BarChart2, FileText, Printer, Share2, Download, CheckSquare, Square, MapPin } from 'lucide-react';
+import SixMonthTrendChart from '../../components/charts/SixMonthTrendChart';
 
 export default function Reports() {
   return (
@@ -133,8 +134,8 @@ export default function Reports() {
 
             <div>
                <h2 style={{ fontSize: '1.125rem', borderLeft: '4px solid var(--color-primary)', paddingLeft: '0.5rem', marginBottom: 'var(--spacing-md)' }}>6-Month Trend Analysis</h2>
-               <div style={{ height: '200px', backgroundColor: '#F9FAFB', border: '1px dashed var(--color-border)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: '0.875rem', color: 'var(--color-text-tertiary)' }}>Chart Visualization (Recharts)</span>
+               <div style={{ backgroundColor: '#F9FAFB', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: 'var(--spacing-sm)' }}>
+                  <SixMonthTrendChart />
                </div>
             </div>
          </div>

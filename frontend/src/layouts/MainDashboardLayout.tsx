@@ -1,10 +1,12 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Bell, Building2, FileText, Settings, ShieldCheck, LogOut, Globe } from 'lucide-react';
 import styles from './MainDashboardLayout.module.css';
+import FloatingChatBubble from '../components/FloatingChatBubble';
 
 export default function MainDashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const hasEmbeddedAssistant = location.pathname.startsWith('/district') || location.pathname.startsWith('/worker');
 
   const navItems = [
     { path: '/national', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
@@ -56,9 +58,9 @@ export default function MainDashboardLayout() {
         {/* Topbar */}
         <header className={styles.topbar}>
           <div className={styles.topNav}>
-            <a href="/national" className={styles.active}>National</a>
-            <a href="/district">Districts</a>
-            <a href="/alerts">Alerts</a>
+            <a onClick={() => navigate('/national')} className={location.pathname.startsWith('/national') ? styles.active : ''}>National</a>
+            <a onClick={() => navigate('/district')} className={location.pathname.startsWith('/district') ? styles.active : ''}>Districts</a>
+            <a onClick={() => navigate('/alerts')} className={location.pathname.startsWith('/alerts') ? styles.active : ''}>Alerts</a>
           </div>
           
           <div className={styles.profileSection}>
@@ -78,6 +80,7 @@ export default function MainDashboardLayout() {
           <Outlet />
         </div>
       </main>
+      {!hasEmbeddedAssistant && <FloatingChatBubble />}
     </div>
   );
 }

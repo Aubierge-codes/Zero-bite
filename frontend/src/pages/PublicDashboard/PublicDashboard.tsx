@@ -1,4 +1,5 @@
 import { Search, MapPin, AlertTriangle, Shield, Droplets, Home, Hospital, Calendar, Thermometer, Info, Circle } from 'lucide-react';
+import FloatingChatBubble from '../../components/FloatingChatBubble';
 
 export default function PublicDashboard() {
   return (
@@ -156,6 +157,7 @@ export default function PublicDashboard() {
            </div>
         </div>
       </div>
+      <FloatingChatBubble />
     </div>
   );
 }

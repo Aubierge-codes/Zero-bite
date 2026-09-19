@@ -1,5 +1,6 @@
 import { Search, ChevronRight, TrendingUp, TrendingDown, Minus, Download, X, MapPin, Info, AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
+import RiskHistoryAreaChart from '../../components/charts/RiskHistoryAreaChart';
 
 export default function DistrictList() {
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>('Gasabo');
@@ -87,8 +88,8 @@ export default function DistrictList() {
                </div>
 
                <h3 style={{ fontSize: '1rem', marginBottom: 'var(--spacing-md)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><TrendingUp size={16} /> 30-Day Risk History</h3>
-               <div style={{ height: '150px', backgroundColor: '#F9FAFB', borderRadius: 'var(--radius-md)', marginBottom: 'var(--spacing-xl)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--color-border)' }}>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)' }}>Area Chart Placeholder</span>
+               <div style={{ backgroundColor: '#F9FAFB', borderRadius: 'var(--radius-md)', marginBottom: 'var(--spacing-xl)', border: '1px solid var(--color-border)', padding: 'var(--spacing-sm)' }}>
+                  <RiskHistoryAreaChart />
                </div>
 
                <h3 style={{ fontSize: '1rem', marginBottom: 'var(--spacing-md)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><MapPin size={16} /> Active Data Feeds</h3>

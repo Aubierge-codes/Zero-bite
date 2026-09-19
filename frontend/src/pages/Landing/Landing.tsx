@@ -1,6 +1,7 @@
 import styles from './Landing.module.css';
 import { useNavigate } from 'react-router-dom';
 import { Satellite, Brain, Smartphone } from 'lucide-react';
+import RwandaHeroMap from '../../components/RwandaHeroMap';
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -27,7 +28,7 @@ export default function Landing() {
             </p>
           </div>
           <div className={styles.mapPlaceholder}>
-            Interactive Map Visualization Placeholder
+            <RwandaHeroMap />
           </div>
         </div>
       </section>

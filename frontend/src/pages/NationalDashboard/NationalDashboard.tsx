@@ -1,4 +1,21 @@
-import { Download, Zap, AlertTriangle, TrendingUp, Users, MapPin, Layers, RefreshCw } from 'lucide-react';
+import { Download, Zap, AlertTriangle, TrendingUp, Users, MapPin, Layers, RefreshCw, Droplet, Wind, CloudRain } from 'lucide-react';
+import DistrictRiskMap from '../../components/DistrictRiskMap';
+import RiskTrendChart from '../../components/charts/RiskTrendChart';
+
+const priorityDistricts = [
+  { name: 'Kayonza', score: 88, hazard: 'Malaria', icon: <Droplet size={14} /> },
+  { name: 'Bugesera', score: 82, hazard: 'Heatwave', icon: <Wind size={14} /> },
+  { name: 'Gicumbi', score: 75, hazard: 'Floods', icon: <CloudRain size={14} /> },
+  { name: 'Nyamasheke', score: 68, hazard: 'Malaria', icon: <Droplet size={14} /> },
+  { name: 'Rubavu', score: 64, hazard: 'Floods', icon: <CloudRain size={14} /> },
+];
+
+function riskColor(score: number) {
+  if (score >= 76) return 'var(--color-risk-critical)';
+  if (score >= 51) return 'var(--color-risk-high)';
+  if (score >= 26) return 'var(--color-risk-moderate)';
+  return 'var(--color-risk-low)';
+}
 
 export default function NationalDashboard() {
   return (
@@ -72,9 +89,9 @@ export default function NationalDashboard() {
             </div>
           </div>
           
-          <div style={{ flex: 1, backgroundColor: '#F0F4F8', borderRadius: 'var(--radius-md)', minHeight: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-             <p style={{ color: 'var(--color-text-tertiary)' }}>Interactive Leaflet Map will render here</p>
-             <div style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div style={{ flex: 1, backgroundColor: '#F0F4F8', borderRadius: 'var(--radius-md)', minHeight: '400px', position: 'relative', overflow: 'hidden' }}>
+             <DistrictRiskMap />
+             <div style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', zIndex: 400 }}>
                 <button className="btn-outline" style={{ backgroundColor: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Layers size={16} /> Toggle Hazard Layers</button>
                 <button className="btn-outline" style={{ backgroundColor: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><RefreshCw size={16} /> Sync Satellite Data</button>
              </div>
@@ -110,6 +127,57 @@ export default function NationalDashboard() {
           </ul>
 
           <button className="btn-primary" style={{ width: '100%', marginTop: 'var(--spacing-xl)' }}>Generate Full Strategy Report</button>
+        </div>
+      </div>
+
+      <div className="grid" style={{ gridTemplateColumns: '2fr 1fr', gap: 'var(--spacing-xl)', marginTop: 'var(--spacing-xl)' }}>
+        {/* Risk Probability Trends */}
+        <div className="card">
+          <div className="flex justify-between items-center" style={{ marginBottom: '0.25rem' }}>
+            <h3 style={{ margin: 0 }}>Risk Probability Trends</h3>
+            <div className="flex items-center gap-md" style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
+              <span className="flex items-center gap-sm"><span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'var(--color-text-primary)' }} /> Historical</span>
+              <span className="flex items-center gap-sm"><span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'var(--color-text-tertiary)' }} /> Predicted</span>
+            </div>
+          </div>
+          <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-md)' }}>Comparing historical norms vs. predicted intelligence</p>
+          <RiskTrendChart />
+        </div>
+
+        {/* District Priority Ranking */}
+        <div className="card">
+          <div className="flex justify-between items-center" style={{ marginBottom: '0.25rem' }}>
+            <h3 style={{ margin: 0 }}>District Priority Ranking</h3>
+            <a href="/districts" style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>View All Districts &gt;</a>
+          </div>
+          <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-md)' }}>Top districts requiring immediate attention</p>
+
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ fontSize: '0.7rem', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', textAlign: 'left' }}>
+                <th style={{ paddingBottom: '0.5rem', fontWeight: 600 }}>District</th>
+                <th style={{ paddingBottom: '0.5rem', fontWeight: 600 }}>Risk Score</th>
+                <th style={{ paddingBottom: '0.5rem', fontWeight: 600 }}>Hazard Type</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {priorityDistricts.map((d) => (
+                <tr key={d.name} style={{ borderTop: '1px solid var(--color-divider)' }}>
+                  <td style={{ padding: '0.6rem 0', fontWeight: 500, fontSize: '0.875rem' }}>{d.name}</td>
+                  <td style={{ padding: '0.6rem 0' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 28, padding: '0 6px', height: 22, borderRadius: 'var(--radius-pill)', fontSize: '0.75rem', fontWeight: 700, color: riskColor(d.score), backgroundColor: `${riskColor(d.score)}1A` }}>
+                      {d.score}
+                    </span>
+                  </td>
+                  <td style={{ padding: '0.6rem 0', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
+                    <span className="flex items-center gap-sm">{d.icon} {d.hazard}</span>
+                  </td>
+                  <td style={{ padding: '0.6rem 0', textAlign: 'right', color: 'var(--color-text-tertiary)' }}>&gt;</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

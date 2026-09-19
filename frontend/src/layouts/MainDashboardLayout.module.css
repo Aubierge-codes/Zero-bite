@@ -120,6 +120,7 @@
   font-weight: 500;
   padding: var(--spacing-md) 0;
   border-bottom: 2px solid transparent;
+  cursor: pointer;
 }
 
 .topNav a.active {

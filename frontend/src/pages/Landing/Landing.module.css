@@ -108,10 +108,9 @@
   top: 50%;
   transform: translateY(-50%);
   width: 50%;
-  height: 400px;
-  background: #E5E7EB;
-  border-radius: var(--radius-lg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  max-width: 460px;
+}
+
+.mapPlaceholder > * {
+  width: 100%;
 }

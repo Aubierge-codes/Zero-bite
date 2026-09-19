@@ -1,4 +1,22 @@
 import { Search, Settings, MapPin, Thermometer, Droplets, Smartphone, FileText, TrendingUp, Bell, Package, Sparkles, ArrowUpRight } from 'lucide-react';
+import SectorForecastChart from '../../components/charts/SectorForecastChart';
+
+const sectors = [
+  { name: 'Gahini', score: 82 },
+  { name: 'Kabare', score: 65 },
+  { name: 'Kabarondo', score: 44 },
+  { name: 'Mukarange', score: 71 },
+  { name: 'Murama', score: 38 },
+  { name: 'Murundi', score: 55 },
+  { name: 'Mwiri', score: 88 },
+  { name: 'Ndego', score: 91 },
+];
+
+function sectorColor(score: number) {
+  if (score >= 76) return { bg: '#FDE8E8', border: 'var(--color-risk-critical)', text: 'var(--color-risk-critical)' };
+  if (score >= 51) return { bg: '#FEF0E6', border: 'var(--color-risk-high)', text: 'var(--color-risk-high)' };
+  return { bg: '#F0F9F0', border: 'var(--color-risk-low)', text: 'var(--color-risk-low)' };
+}
 
 export default function DistrictDashboard() {
   return (
@@ -66,8 +84,18 @@ export default function DistrictDashboard() {
               <div className="card">
                  <h3 style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><MapPin size={20} /> Sector Risk Heatmap</h3>
                  <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-md)' }}>Visual distribution of breeding risk across Kayonza</p>
-                 <div style={{ backgroundColor: '#F9FAFB', minHeight: '250px', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ color: 'var(--color-text-tertiary)' }}>Grid Map Placeholder</span>
+                 <div style={{ backgroundColor: '#F9FAFB', minHeight: '250px', borderRadius: 'var(--radius-md)', padding: 'var(--spacing-sm)' }}>
+                    <div className="grid grid-cols-3 gap-sm">
+                       {sectors.map((s) => {
+                          const c = sectorColor(s.score);
+                          return (
+                             <div key={s.name} style={{ backgroundColor: c.bg, border: `1px solid ${c.border}`, borderRadius: 'var(--radius-sm)', padding: 'var(--spacing-sm)' }}>
+                                <div style={{ fontSize: '0.65rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--color-text-secondary)' }}>{s.name}</div>
+                                <div style={{ fontSize: '1.25rem', fontWeight: 700, color: c.text }}>{s.score}</div>
+                             </div>
+                          );
+                       })}
+                    </div>
                  </div>
               </div>
               <div className="card">
@@ -76,8 +104,11 @@ export default function DistrictDashboard() {
                     <span className="badge" style={{ backgroundColor: '#F3F4F6' }}>AI MODEL V4.2</span>
                  </div>
                  <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-md)' }}>Contributing factors for predicted malaria breeding</p>
-                 <div style={{ backgroundColor: '#F9FAFB', minHeight: '250px', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ color: 'var(--color-text-tertiary)' }}>Bar Chart Placeholder</span>
+                 <SectorForecastChart />
+                 <div className="flex gap-md" style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: '0.5rem' }}>
+                    <span className="flex items-center gap-sm"><span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#F97316' }} /> Humidity Index</span>
+                    <span className="flex items-center gap-sm"><span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#14B8A6' }} /> Temperature Factor</span>
+                    <span className="flex items-center gap-sm"><span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#1F2937' }} /> Satellite Pooling</span>
                  </div>
               </div>
            </div>
