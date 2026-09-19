@@ -47,7 +47,7 @@ export default function RwandaHeroMap() {
             backgroundColor: 'white',
             borderRadius: 'var(--radius-md)',
             padding: '0.5rem 0.75rem',
-            fontSize: '0.7rem',
+            fontSize: '0.75rem',
             boxShadow: 'var(--shadow-sm)',
             display: 'flex',
             flexDirection: 'column',
@@ -129,7 +129,7 @@ export default function RwandaHeroMap() {
           textAlign: 'right',
         }}
       >
-        <div style={{ fontSize: '0.65rem', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <div style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           National Average
         </div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.375rem', justifyContent: 'flex-end' }}>
