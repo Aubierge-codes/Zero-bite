@@ -60,6 +60,33 @@
   font-size: 0.875rem;
 }
 
+.footerColumns {
+  display: flex;
+  gap: var(--spacing-2xl);
+}
+
+.footerColumn h4 {
+  font-size: 0.875rem;
+  margin-bottom: var(--spacing-md);
+}
+
+.footerColumn ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.footerColumn a {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  transition: color var(--transition-fast);
+}
+
+.footerColumn a:hover {
+  color: var(--color-text-primary);
+}
+
 .copyright {
   margin-top: var(--spacing-2xl);
   padding: var(--spacing-md) 0;

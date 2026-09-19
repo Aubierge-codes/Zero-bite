@@ -27,7 +27,7 @@ export default function PublicLayout() {
         <Outlet />
       </main>
       <footer className={styles.footer}>
-        <div className="container flex justify-between items-center">
+        <div className="container flex justify-between" style={{ alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--spacing-2xl)', paddingBottom: 'var(--spacing-xl)' }}>
            <div className={styles.footerBrand}>
              <div className="flex items-center gap-sm">
                 <div className={styles.logo}></div>
@@ -35,7 +35,32 @@ export default function PublicLayout() {
              </div>
              <p>Protecting communities through satellite-driven AI predictions and real-time climate intelligence.</p>
            </div>
-           {/* Footer columns could go here */}
+           <div className={styles.footerColumns}>
+             <div className={styles.footerColumn}>
+                <h4>Resources</h4>
+                <ul>
+                  <li><a href="#">Data Methodology</a></li>
+                  <li><a href="#">Meteo Rwanda Portal</a></li>
+                  <li><a href="#">MoH Health Guide</a></li>
+                </ul>
+             </div>
+             <div className={styles.footerColumn}>
+                <h4>Support</h4>
+                <ul>
+                  <li><a href="#">Help Center</a></li>
+                  <li><a href="#">Contact Us</a></li>
+                  <li><a href="/login">Admin Login</a></li>
+                </ul>
+             </div>
+             <div className={styles.footerColumn}>
+                <h4>Platform</h4>
+                <ul>
+                  <li><a href="/public">Public Dashboard</a></li>
+                  <li><a href="#">SMS Subscription</a></li>
+                  <li><a href="#">API Access</a></li>
+                </ul>
+             </div>
+           </div>
         </div>
         <div className={styles.copyright}>
           <div className="container flex justify-between items-center">
