@@ -78,7 +78,7 @@ export default function NationalDashboard() {
         </div>
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: '2fr 1fr', gap: 'var(--spacing-xl)' }}>
+      <div className="split-2-1">
         {/* Heatmap Area */}
         <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
           <div className="flex justify-between items-center" style={{ marginBottom: 'var(--spacing-md)' }}>
@@ -130,7 +130,7 @@ export default function NationalDashboard() {
         </div>
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: '2fr 1fr', gap: 'var(--spacing-xl)', marginTop: 'var(--spacing-xl)' }}>
+      <div className="split-2-1" style={{ marginTop: 'var(--spacing-xl)' }}>
         {/* Risk Probability Trends */}
         <div className="card">
           <div className="flex justify-between items-center" style={{ marginBottom: '0.25rem' }}>
