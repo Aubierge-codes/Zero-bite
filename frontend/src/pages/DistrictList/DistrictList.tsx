@@ -2,18 +2,26 @@ import { Search, ChevronRight, TrendingUp, TrendingDown, Minus, Download, X, Map
 import { useState } from 'react';
 import RiskHistoryAreaChart from '../../components/charts/RiskHistoryAreaChart';
 
+const districts = [
+  { name: 'Gasabo', province: 'Kigali', risk: 82, trend: 'Increasing' as const },
+  { name: 'Kicukiro', province: 'Kigali', risk: 45, trend: 'Stable' as const },
+  { name: 'Nyarugenge', province: 'Kigali', risk: 31, trend: 'Decreasing' as const },
+  { name: 'Musanze', province: 'Northern', risk: 78, trend: 'Increasing' as const },
+  { name: 'Rubavu', province: 'Western', risk: 64, trend: 'Increasing' as const },
+  { name: 'Huye', province: 'Southern', risk: 22, trend: 'Decreasing' as const },
+  { name: 'Nyagatare', province: 'Eastern', risk: 91, trend: 'Increasing' as const },
+];
+
+const trendIcons = { Increasing: TrendingUp, Stable: Minus, Decreasing: TrendingDown };
+
+function trendColor(risk: number, trend: string) {
+  if (trend === 'Decreasing') return 'var(--color-risk-low)';
+  if (trend === 'Stable') return 'var(--color-text-secondary)';
+  return risk > 75 ? 'var(--color-risk-critical)' : 'var(--color-risk-moderate)';
+}
+
 export default function DistrictList() {
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>('Gasabo');
-
-  const districts = [
-    { name: 'Gasabo', province: 'Kigali', risk: 82, trend: 'Increasing', trendIcon: <TrendingUp size={16} color="var(--color-risk-critical)" /> },
-    { name: 'Kicukiro', province: 'Kigali', risk: 45, trend: 'Stable', trendIcon: <Minus size={16} color="var(--color-text-secondary)" /> },
-    { name: 'Nyarugenge', province: 'Kigali', risk: 31, trend: 'Decreasing', trendIcon: <TrendingDown size={16} color="var(--color-risk-low)" /> },
-    { name: 'Musanze', province: 'Northern', risk: 78, trend: 'Increasing', trendIcon: <TrendingUp size={16} color="var(--color-risk-critical)" /> },
-    { name: 'Rubavu', province: 'Western', risk: 64, trend: 'Increasing', trendIcon: <TrendingUp size={16} color="var(--color-risk-moderate)" /> },
-    { name: 'Huye', province: 'Southern', risk: 22, trend: 'Decreasing', trendIcon: <TrendingDown size={16} color="var(--color-risk-low)" /> },
-    { name: 'Nyagatare', province: 'Eastern', risk: 91, trend: 'Increasing', trendIcon: <TrendingUp size={16} color="var(--color-risk-critical)" /> },
-  ];
 
   return (
     <div style={{ position: 'relative', height: '100%', display: 'flex', gap: 'var(--spacing-xl)', margin: '-var(--spacing-xl)' }}>
@@ -41,23 +49,27 @@ export default function DistrictList() {
                   </tr>
                </thead>
                <tbody>
-                  {districts.map((d, i) => (
-                     <tr key={i} style={{ borderBottom: '1px solid var(--color-border)', cursor: 'pointer', backgroundColor: selectedDistrict === d.name ? '#F0F9FF' : 'transparent' }} onClick={() => setSelectedDistrict(d.name)}>
-                        <td style={{ padding: 'var(--spacing-md) var(--spacing-lg)', fontWeight: 500 }}>{d.name}</td>
-                        <td style={{ padding: 'var(--spacing-md) var(--spacing-lg)', color: 'var(--color-text-secondary)' }}>{d.province}</td>
-                        <td style={{ padding: 'var(--spacing-md) var(--spacing-lg)', textAlign: 'center' }}>
-                           <span style={{ color: d.risk > 75 ? 'var(--color-risk-critical)' : d.risk > 50 ? 'var(--color-risk-moderate)' : 'var(--color-risk-low)', fontWeight: 600 }}>{d.risk}</span>
-                        </td>
-                        <td style={{ padding: 'var(--spacing-md) var(--spacing-lg)' }}>
-                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: d.trend === 'Increasing' ? (d.risk > 75 ? 'var(--color-risk-critical)' : 'var(--color-risk-moderate)') : (d.trend === 'Decreasing' ? 'var(--color-risk-low)' : 'var(--color-text-secondary)') }}>
-                              {d.trendIcon} {d.trend}
-                           </div>
-                        </td>
-                        <td style={{ padding: 'var(--spacing-md) var(--spacing-lg)', textAlign: 'right' }}>
-                           <ChevronRight size={16} color="var(--color-text-secondary)" />
-                        </td>
-                     </tr>
-                  ))}
+                  {districts.map((d, i) => {
+                     const TrendIcon = trendIcons[d.trend];
+                     const color = trendColor(d.risk, d.trend);
+                     return (
+                        <tr key={i} style={{ borderBottom: '1px solid var(--color-border)', cursor: 'pointer', backgroundColor: selectedDistrict === d.name ? '#F0F9FF' : 'transparent' }} onClick={() => setSelectedDistrict(d.name)}>
+                           <td style={{ padding: 'var(--spacing-md) var(--spacing-lg)', fontWeight: 500 }}>{d.name}</td>
+                           <td style={{ padding: 'var(--spacing-md) var(--spacing-lg)', color: 'var(--color-text-secondary)' }}>{d.province}</td>
+                           <td style={{ padding: 'var(--spacing-md) var(--spacing-lg)', textAlign: 'center' }}>
+                              <span style={{ color: d.risk > 75 ? 'var(--color-risk-critical)' : d.risk > 50 ? 'var(--color-risk-moderate)' : 'var(--color-risk-low)', fontWeight: 600 }}>{d.risk}</span>
+                           </td>
+                           <td style={{ padding: 'var(--spacing-md) var(--spacing-lg)' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color }}>
+                                 <TrendIcon size={16} /> {d.trend}
+                              </div>
+                           </td>
+                           <td style={{ padding: 'var(--spacing-md) var(--spacing-lg)', textAlign: 'right' }}>
+                              <ChevronRight size={16} color="var(--color-text-secondary)" />
+                           </td>
+                        </tr>
+                     );
+                  })}
                </tbody>
             </table>
          </div>
