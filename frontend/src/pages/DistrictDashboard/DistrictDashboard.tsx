@@ -90,7 +90,7 @@ export default function DistrictDashboard() {
                           const c = sectorColor(s.score);
                           return (
                              <div key={s.name} style={{ backgroundColor: c.bg, border: `1px solid ${c.border}`, borderRadius: 'var(--radius-sm)', padding: 'var(--spacing-sm)' }}>
-                                <div style={{ fontSize: '0.65rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--color-text-secondary)' }}>{s.name}</div>
+                                <div style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--color-text-secondary)' }}>{s.name}</div>
                                 <div style={{ fontSize: '1.25rem', fontWeight: 700, color: c.text }}>{s.score}</div>
                              </div>
                           );
