@@ -42,8 +42,8 @@ export default function MainDashboardLayout() {
           <div className={styles.aiStatus}>
             <span className={styles.aiStatusIcon}><ShieldCheck size={20} /></span>
             <div>
-              <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>AI Status</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Models updated 12m ago. Satellite feed active.</div>
+              <div className={styles.aiStatusTitle}>AI Status</div>
+              <div className={styles.aiStatusDetail}>Models updated 12m ago. Satellite feed active.</div>
             </div>
           </div>
           <div className={styles.logout} onClick={() => navigate('/login')}>

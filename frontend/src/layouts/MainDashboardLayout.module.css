@@ -84,6 +84,16 @@
   margin-top: 2px;
 }
 
+.aiStatusTitle {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.aiStatusDetail {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
 .logout {
   display: flex;
   align-items: center;
