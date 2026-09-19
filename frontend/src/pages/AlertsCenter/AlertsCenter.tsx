@@ -1,4 +1,5 @@
 import { Search, Filter, Save, Send, MonitorSmartphone, Smartphone, MessageSquare, Bot, AlertTriangle } from 'lucide-react';
+import styles from './AlertsCenter.module.css';
 
 const composeTabs = [
   { label: 'Compose Message', icon: MessageSquare },
@@ -8,9 +9,9 @@ const composeTabs = [
 
 export default function AlertsCenter() {
   return (
-    <div style={{ height: 'calc(100vh - 120px)', display: 'flex', gap: 'var(--spacing-xl)', margin: '-var(--spacing-xl)' }}>
+    <div className={styles.layout}>
       {/* Sidebar: Alerts Inbox */}
-      <div style={{ width: '320px', borderRight: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--color-surface)' }}>
+      <div className={styles.inbox}>
         <div style={{ padding: 'var(--spacing-lg)', borderBottom: '1px solid var(--color-border)' }}>
            <div className="flex justify-between items-center" style={{ marginBottom: 'var(--spacing-md)' }}>
               <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Alerts Inbox</h2>
@@ -76,9 +77,9 @@ export default function AlertsCenter() {
       </div>
 
       {/* Main Panel: Alert Composer */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+      <div className={styles.composer}>
         <div style={{ padding: 'var(--spacing-xl)' }}>
-           <div className="flex justify-between items-center" style={{ marginBottom: 'var(--spacing-xl)' }}>
+           <div className="page-header" style={{ marginBottom: 'var(--spacing-xl)' }}>
               <div>
                  <h1 style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>Alert Composer</h1>
                  <p style={{ color: 'var(--color-text-secondary)' }}>Draft climate intelligence messages for cross-channel delivery.</p>
@@ -106,7 +107,7 @@ export default function AlertsCenter() {
               ))}
            </div>
 
-           <div className="grid" style={{ gridTemplateColumns: '2fr 1fr', gap: 'var(--spacing-xl)' }}>
+           <div className="split-2-1">
               {/* Form Area */}
               <div className="flex-col gap-lg">
                  <div className="card">
