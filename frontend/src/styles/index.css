@@ -148,6 +148,18 @@ button {
 .gap-lg { gap: var(--spacing-lg); }
 .gap-xl { gap: var(--spacing-xl); }
 
+/* Page header row: title/subtitle on the left, action buttons on the
+   right. Several pages repeat this "flex justify-between items-center"
+   pattern; centralizing the mobile wrap behavior here instead of
+   patching each page's inline style individually. */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
 .grid { display: grid; }
 .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
 .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
