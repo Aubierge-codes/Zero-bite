@@ -21,8 +21,8 @@ function sectorColor(score: number) {
 export default function DistrictDashboard() {
   return (
     <div>
-      <div className="flex justify-between items-center" style={{ marginBottom: 'var(--spacing-xl)' }}>
-        <div className="flex items-center gap-md">
+      <div className="page-header" style={{ marginBottom: 'var(--spacing-xl)' }}>
+        <div className="flex items-center gap-md" style={{ flexWrap: 'wrap' }}>
            <h1 style={{ fontSize: '2rem', marginBottom: 0 }}>Kayonza</h1>
            <span className="badge badge-low" style={{ backgroundColor: '#F3F4F6', color: 'var(--color-text-secondary)' }}>Eastern Province</span>
         </div>
@@ -35,7 +35,7 @@ export default function DistrictDashboard() {
       <div className="split-2-1">
         <div className="flex-col gap-xl">
            <div className="card">
-              <div className="flex justify-between">
+              <div className="flex justify-between" style={{ flexWrap: 'wrap', gap: 'var(--spacing-lg)' }}>
                  <div>
                     <div className="flex items-center gap-sm" style={{ marginBottom: '0.5rem' }}>
                        <span className="badge badge-high">High Risk</span>
