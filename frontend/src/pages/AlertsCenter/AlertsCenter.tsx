@@ -1,5 +1,11 @@
 import { Search, Filter, Save, Send, MonitorSmartphone, Smartphone, MessageSquare, Bot, AlertTriangle } from 'lucide-react';
 
+const composeTabs = [
+  { label: 'Compose Message', icon: MessageSquare },
+  { label: 'Templates', icon: MonitorSmartphone },
+  { label: 'Fallback Rules', icon: AlertTriangle },
+];
+
 export default function AlertsCenter() {
   return (
     <div style={{ height: 'calc(100vh - 120px)', display: 'flex', gap: 'var(--spacing-xl)', margin: '-var(--spacing-xl)' }}>
@@ -84,9 +90,20 @@ export default function AlertsCenter() {
            </div>
 
            <div className="flex gap-md" style={{ marginBottom: 'var(--spacing-xl)', borderBottom: '1px solid var(--color-border)' }}>
-              <button style={{ padding: 'var(--spacing-sm) var(--spacing-md)', fontWeight: 600, borderBottom: '2px solid var(--color-primary)' }} className="flex items-center gap-sm"><MessageSquare size={16} /> Compose Message</button>
-              <button style={{ padding: 'var(--spacing-sm) var(--spacing-md)', color: 'var(--color-text-secondary)' }} className="flex items-center gap-sm"><MonitorSmartphone size={16} /> Templates</button>
-              <button style={{ padding: 'var(--spacing-sm) var(--spacing-md)', color: 'var(--color-text-secondary)' }} className="flex items-center gap-sm"><AlertTriangle size={16} /> Fallback Rules</button>
+              {composeTabs.map(({ label, icon: Icon }, i) => (
+                 <button
+                    key={label}
+                    className="flex items-center gap-sm"
+                    style={{
+                       padding: 'var(--spacing-sm) var(--spacing-md)',
+                       fontWeight: i === 0 ? 600 : 400,
+                       color: i === 0 ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+                       borderBottom: i === 0 ? '2px solid var(--color-primary)' : '2px solid transparent',
+                    }}
+                 >
+                    <Icon size={16} /> {label}
+                 </button>
+              ))}
            </div>
 
            <div className="grid" style={{ gridTemplateColumns: '2fr 1fr', gap: 'var(--spacing-xl)' }}>
