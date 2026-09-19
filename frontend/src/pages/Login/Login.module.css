@@ -148,3 +148,19 @@
   display: flex;
   gap: var(--spacing-sm);
 }
+
+@media (max-width: 768px) {
+  .loginContainer {
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+
+  .loginWrapper {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-2xl);
+    margin: var(--spacing-lg) auto;
+  }
+
+  .roleSelection h1 {
+    font-size: 2rem;
+  }
+}
