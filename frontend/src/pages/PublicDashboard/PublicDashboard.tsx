@@ -59,7 +59,7 @@ export default function PublicDashboard() {
            </div>
            
            <div>
-              <div className="flex justify-between items-center" style={{ marginBottom: 'var(--spacing-lg)' }}>
+              <div className="flex justify-between items-center" style={{ marginBottom: 'var(--spacing-lg)', flexWrap: 'wrap', gap: 'var(--spacing-sm)' }}>
                  <h2 style={{ fontSize: '1.5rem' }}>Recommended Prevention</h2>
                  <a href="#" style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>See All Tips &rarr;</a>
               </div>
