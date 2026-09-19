@@ -133,7 +133,7 @@ export default function WorkerDashboard() {
               
               <div style={{ padding: 'var(--spacing-md)', borderBottom: '1px solid var(--color-border)' }}>
                  <div className="flex justify-between items-center" style={{ marginBottom: '0.25rem' }}>
-                    <span className="badge badge-critical" style={{ fontSize: '0.65rem' }}>Urgent</span>
+                    <span className="badge badge-critical">Urgent</span>
                     <span style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)' }}>10m ago</span>
                  </div>
                  <h4 style={{ fontSize: '0.875rem', margin: '0.25rem 0' }}>Visit Cell B Breeding Site</h4>
