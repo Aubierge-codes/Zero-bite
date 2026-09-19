@@ -3,8 +3,8 @@ import { MapPin, Clock, CheckCircle, AlertTriangle, Users, Info, Calendar, Send,
 export default function WorkerDashboard() {
   return (
     <div>
-      <div className="flex justify-between items-center" style={{ marginBottom: 'var(--spacing-xl)' }}>
-        <div className="flex items-center gap-md">
+      <div className="flex justify-between items-center" style={{ marginBottom: 'var(--spacing-xl)', flexWrap: 'wrap', gap: 'var(--spacing-md)' }}>
+        <div className="flex items-center gap-md" style={{ flexWrap: 'wrap' }}>
            <h1 style={{ fontSize: '2rem', marginBottom: 0 }}>Worker Dashboard</h1>
            <span className="badge badge-low" style={{ backgroundColor: '#F3F4F6', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><MapPin size={12} /> Kinyinya Village, Gasabo District</span>
         </div>
@@ -14,7 +14,7 @@ export default function WorkerDashboard() {
         </div>
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: '1fr 2fr 1fr', gap: 'var(--spacing-xl)' }}>
+      <div className="split-1-2-1">
         {/* Left Column */}
         <div className="flex-col gap-xl">
            <div className="card text-center">
