@@ -68,7 +68,7 @@ export default function PublicDashboard() {
                  <div className="card" style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
                     <div><Shield size={24} /></div>
                     <div>
-                       <h3 style={{ margin: 0, fontSize: '1rem', marginBottom: '0.25rem' }}>Use Bed Nets <span className="badge badge-low" style={{ marginLeft: '0.25rem', fontSize: '0.65rem' }}>Priority</span></h3>
+                       <h3 style={{ margin: 0, fontSize: '1rem', marginBottom: '0.25rem' }}>Use Bed Nets <span className="badge badge-low" style={{ marginLeft: '0.25rem' }}>Priority</span></h3>
                        <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>Ensure all family members sleep under insecticide-treated nets.</p>
                     </div>
                  </div>
