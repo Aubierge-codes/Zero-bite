@@ -25,7 +25,7 @@ export default function Settings() {
         <p style={{ color: 'var(--color-text-secondary)' }}>Manage platform security, technical integrations, and AI risk logic.</p>
       </div>
 
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--color-border)', marginBottom: 'var(--spacing-xl)' }}>
+      <div style={{ display: 'flex', overflowX: 'auto', borderBottom: '1px solid var(--color-border)', marginBottom: 'var(--spacing-xl)' }}>
          {tabs.map(({ label, icon: Icon }, i) => (
             <button
                key={label}
@@ -34,6 +34,8 @@ export default function Settings() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
+                  flexShrink: 0,
+                  whiteSpace: 'nowrap',
                   borderBottom: i === 0 ? '2px solid var(--color-primary)' : '2px solid transparent',
                   fontWeight: i === 0 ? 600 : 400,
                   color: i === 0 ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
@@ -45,15 +47,16 @@ export default function Settings() {
       </div>
 
       <div className="card" style={{ padding: 0, overflow: 'hidden', marginBottom: 'var(--spacing-2xl)' }}>
-         <div className="flex justify-between items-center" style={{ padding: 'var(--spacing-lg)', borderBottom: '1px solid var(--color-border)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#F3F4F6', borderRadius: 'var(--radius-sm)', padding: 'var(--spacing-sm) var(--spacing-md)', width: '300px' }}>
+         <div className="flex justify-between items-center" style={{ padding: 'var(--spacing-lg)', borderBottom: '1px solid var(--color-border)', flexWrap: 'wrap', gap: 'var(--spacing-md)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#F3F4F6', borderRadius: 'var(--radius-sm)', padding: 'var(--spacing-sm) var(--spacing-md)', width: '100%', maxWidth: '300px' }}>
                <Search size={16} color="var(--color-text-secondary)" />
                <input type="text" placeholder="Search users by name or district..." style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', padding: '0 var(--spacing-sm)', fontSize: '0.875rem' }} />
             </div>
             <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Plus size={16} /> Add User</button>
          </div>
 
-         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+         <div style={{ overflowX: 'auto' }}>
+         <table style={{ width: '100%', minWidth: '640px', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
                <tr style={{ backgroundColor: '#F9FAFB', borderBottom: '1px solid var(--color-border)', fontSize: '0.75rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase' }}>
                   <th style={{ padding: 'var(--spacing-md) var(--spacing-lg)', fontWeight: 600 }}>User</th>
@@ -84,9 +87,10 @@ export default function Settings() {
                ))}
             </tbody>
          </table>
+         </div>
       </div>
 
-      <div style={{ backgroundColor: '#F9FAFB', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', padding: 'var(--spacing-xl)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ backgroundColor: '#F9FAFB', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', padding: 'var(--spacing-xl)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--spacing-lg)' }}>
          <div style={{ display: 'flex', gap: 'var(--spacing-lg)', maxWidth: '600px' }}>
             <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                <ShieldCheck size={24} color="var(--color-text-secondary)" />
