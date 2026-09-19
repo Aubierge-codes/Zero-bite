@@ -1,11 +1,13 @@
+import { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Bell, Building2, FileText, Settings, ShieldCheck, LogOut, Globe } from 'lucide-react';
+import { LayoutDashboard, Bell, Building2, FileText, Settings, ShieldCheck, LogOut, Globe, Menu, X } from 'lucide-react';
 import styles from './MainDashboardLayout.module.css';
 import FloatingChatBubble from '../components/FloatingChatBubble';
 
 export default function MainDashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const hasEmbeddedAssistant = location.pathname.startsWith('/district') || location.pathname.startsWith('/worker');
 
   const navItems = [
@@ -16,21 +18,31 @@ export default function MainDashboardLayout() {
     { path: '/settings', icon: <Settings size={20} />, label: 'Settings' },
   ];
 
+  const goTo = (path: string) => {
+    navigate(path);
+    setSidebarOpen(false);
+  };
+
   return (
     <div className={styles.layout}>
+      {sidebarOpen && <div className={styles.overlay} onClick={() => setSidebarOpen(false)} />}
+
       {/* Sidebar */}
-      <aside className={styles.sidebar}>
+      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
         <div className={styles.brand}>
           <div className={styles.logo}></div>
           <span className={styles.brandText}>Zero Bite</span>
+          <button className={styles.sidebarClose} onClick={() => setSidebarOpen(false)} aria-label="Close menu">
+            <X size={20} />
+          </button>
         </div>
-        
+
         <nav className={styles.nav}>
           {navItems.map(item => (
-            <div 
+            <div
               key={item.path}
               className={`${styles.navItem} ${location.pathname.startsWith(item.path) ? styles.active : ''}`}
-              onClick={() => navigate(item.path)}
+              onClick={() => goTo(item.path)}
             >
               <span>{item.icon}</span>
               <span>{item.label}</span>
@@ -46,7 +58,7 @@ export default function MainDashboardLayout() {
               <div className={styles.aiStatusDetail}>Models updated 12m ago. Satellite feed active.</div>
             </div>
           </div>
-          <div className={styles.logout} onClick={() => navigate('/login')}>
+          <div className={styles.logout} onClick={() => goTo('/login')}>
             <span><LogOut size={20} /></span>
             <span>Logout</span>
           </div>
@@ -57,12 +69,16 @@ export default function MainDashboardLayout() {
       <main className={styles.mainContent}>
         {/* Topbar */}
         <header className={styles.topbar}>
+          <button className={styles.menuToggle} onClick={() => setSidebarOpen(true)} aria-label="Open menu">
+            <Menu size={22} />
+          </button>
+
           <div className={styles.topNav}>
             <a onClick={() => navigate('/national')} className={location.pathname.startsWith('/national') ? styles.active : ''}>National</a>
             <a onClick={() => navigate('/district')} className={location.pathname.startsWith('/district') ? styles.active : ''}>Districts</a>
             <a onClick={() => navigate('/alerts')} className={location.pathname.startsWith('/alerts') ? styles.active : ''}>Alerts</a>
           </div>
-          
+
           <div className={styles.profileSection}>
             <span className={styles.langToggle} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Globe size={16} /> EN / RW</span>
             <div className={styles.profile}>

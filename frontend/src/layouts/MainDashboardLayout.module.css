@@ -22,6 +22,21 @@
   margin-bottom: var(--spacing-2xl);
 }
 
+.sidebarClose {
+  display: none;
+  margin-left: auto;
+  color: var(--color-text-secondary);
+}
+
+.overlay {
+  display: none;
+}
+
+.menuToggle {
+  display: none;
+  color: var(--color-text-primary);
+}
+
 .logo {
   width: 24px;
   height: 24px;
@@ -183,4 +198,57 @@
   flex: 1;
   overflow-y: auto;
   padding: var(--spacing-xl);
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 210;
+    transform: translateX(-100%);
+    transition: transform var(--transition-normal);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .sidebar.sidebarOpen {
+    transform: translateX(0);
+  }
+
+  .sidebarClose {
+    display: flex;
+  }
+
+  .overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 200;
+  }
+
+  .menuToggle {
+    display: flex;
+  }
+
+  .topNav {
+    display: none;
+  }
+
+  .topbar {
+    padding: 0 var(--spacing-md);
+  }
+
+  .langToggle {
+    display: none;
+  }
+
+  .profileInfo {
+    display: none;
+  }
+
+  .pageContent {
+    padding: var(--spacing-md);
+  }
 }
