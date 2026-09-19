@@ -13,7 +13,7 @@ export default function PublicDashboard() {
               <span style={{ padding: 'var(--spacing-sm) var(--spacing-md)', color: 'var(--color-text-tertiary)' }}><Search size={20} /></span>
               <input type="text" placeholder="Kigali - Gasabo" style={{ flex: 1, border: 'none', outline: 'none', fontSize: '1rem', backgroundColor: 'transparent' }} defaultValue="Kigali - Gasabo" />
            </div>
-           <div style={{ display: 'flex', gap: 'var(--spacing-sm)', justifyContent: 'center', marginTop: 'var(--spacing-sm)', fontSize: '0.875rem' }}>
+           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-sm)', justifyContent: 'center', marginTop: 'var(--spacing-sm)', fontSize: '0.875rem' }}>
               <span style={{ color: 'var(--color-text-secondary)' }}>Popular:</span>
               <span className="badge" style={{ backgroundColor: '#F3F4F6' }}>Kigali</span>
               <span className="badge" style={{ backgroundColor: '#F3F4F6' }}>Musanze</span>
@@ -23,7 +23,7 @@ export default function PublicDashboard() {
         </div>
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: '2fr 1fr', gap: 'var(--spacing-xl)' }}>
+      <div className="split-2-1">
         <div className="flex-col gap-xl">
            <div className="card">
               <div className="flex justify-between items-center" style={{ marginBottom: 'var(--spacing-lg)' }}>
@@ -31,7 +31,7 @@ export default function PublicDashboard() {
                  <span className="badge" style={{ backgroundColor: '#F3F4F6' }}>Active Forecast</span>
               </div>
               
-              <div className="flex gap-xl items-center">
+              <div className="flex gap-xl items-center" style={{ flexWrap: 'wrap' }}>
                  <div style={{ textAlign: 'center', padding: 'var(--spacing-lg)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
                     <div style={{ width: '80px', height: '80px', borderRadius: '50%', border: '6px solid #FDE8E8', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto var(--spacing-sm)' }}>
                        <span style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--color-risk-critical)' }}>68</span>
