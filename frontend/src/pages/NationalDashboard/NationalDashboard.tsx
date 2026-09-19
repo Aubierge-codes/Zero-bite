@@ -20,7 +20,7 @@ function riskColor(score: number) {
 export default function NationalDashboard() {
   return (
     <div>
-      <div className="flex justify-between items-center" style={{ marginBottom: 'var(--spacing-xl)' }}>
+      <div className="page-header" style={{ marginBottom: 'var(--spacing-xl)' }}>
         <div>
           <h1 style={{ fontSize: '2rem', marginBottom: '0.25rem' }}>National Climate Intelligence</h1>
           <p style={{ color: 'var(--color-text-secondary)' }}>Strategic oversight and AI-driven predictive modeling for Rwandan Districts.</p>
