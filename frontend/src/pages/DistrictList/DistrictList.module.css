@@ -1,0 +1,49 @@
+.layout {
+  position: relative;
+  height: 100%;
+  display: flex;
+  gap: var(--spacing-xl);
+  margin: calc(-1 * var(--spacing-xl));
+}
+
+.tableArea {
+  flex: 1;
+  padding: var(--spacing-xl);
+  overflow-y: auto;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.drawer {
+  width: 400px;
+  flex-shrink: 0;
+  background-color: var(--color-surface);
+  border-left: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .layout {
+    flex-direction: column;
+    height: auto;
+    margin: calc(-1 * var(--spacing-md));
+  }
+
+  .tableArea {
+    padding: var(--spacing-md);
+    overflow-y: visible;
+  }
+
+  .drawer {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--color-border);
+    height: auto;
+    overflow-y: visible;
+  }
+}

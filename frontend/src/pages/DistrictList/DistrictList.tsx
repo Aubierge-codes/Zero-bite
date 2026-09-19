@@ -1,6 +1,7 @@
 import { Search, ChevronRight, TrendingUp, TrendingDown, Minus, Download, X, MapPin, Info, AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 import RiskHistoryAreaChart from '../../components/charts/RiskHistoryAreaChart';
+import styles from './DistrictList.module.css';
 
 const districts = [
   { name: 'Gasabo', province: 'Kigali', risk: 82, trend: 'Increasing' as const },
@@ -24,21 +25,22 @@ export default function DistrictList() {
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>('Gasabo');
 
   return (
-    <div style={{ position: 'relative', height: '100%', display: 'flex', gap: 'var(--spacing-xl)', margin: '-var(--spacing-xl)' }}>
+    <div className={styles.layout}>
       {/* Main Table Area */}
-      <div style={{ flex: 1, padding: 'var(--spacing-xl)', overflowY: 'auto' }}>
+      <div className={styles.tableArea}>
          <div style={{ marginBottom: 'var(--spacing-xl)' }}>
             <h2 style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ministry &gt; District Management</h2>
             <h1 style={{ fontSize: '2rem', margin: '0.25rem 0' }}>Administrative Districts</h1>
          </div>
-         
+
          <div style={{ backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
             <div style={{ padding: 'var(--spacing-md) var(--spacing-lg)', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center' }}>
                <Search size={18} color="var(--color-text-secondary)" />
                <input type="text" placeholder="Search districts by name or province..." style={{ flex: 1, border: 'none', outline: 'none', padding: '0 var(--spacing-sm)', fontSize: '0.875rem' }} />
             </div>
-            
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+
+            <div className={styles.tableWrap}>
+            <table style={{ width: '100%', minWidth: '560px', borderCollapse: 'collapse', textAlign: 'left' }}>
                <thead>
                   <tr style={{ backgroundColor: '#F9FAFB', borderBottom: '1px solid var(--color-border)', fontSize: '0.75rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase' }}>
                      <th style={{ padding: 'var(--spacing-md) var(--spacing-lg)', fontWeight: 600 }}>District Name</th>
@@ -72,12 +74,13 @@ export default function DistrictList() {
                   })}
                </tbody>
             </table>
+            </div>
          </div>
       </div>
 
       {/* Side Drawer: District Profile */}
       {selectedDistrict && (
-         <div style={{ width: '400px', backgroundColor: 'var(--color-surface)', borderLeft: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
+         <div className={styles.drawer}>
             <div style={{ padding: 'var(--spacing-lg)', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                <div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>DISTRICT PROFILE</div>
