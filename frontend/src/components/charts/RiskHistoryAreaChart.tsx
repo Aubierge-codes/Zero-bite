@@ -21,8 +21,8 @@ export default function RiskHistoryAreaChart() {
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-divider)" vertical={false} />
-        <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--color-text-tertiary)' }} axisLine={false} tickLine={false} />
-        <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: 'var(--color-text-tertiary)' }} axisLine={false} tickLine={false} width={28} />
+        <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'var(--color-text-tertiary)' }} axisLine={false} tickLine={false} />
+        <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: 'var(--color-text-tertiary)' }} axisLine={false} tickLine={false} width={28} />
         <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid var(--color-border)', fontSize: '0.75rem' }} />
         <Area type="monotone" dataKey="risk" stroke="var(--color-text-primary)" strokeWidth={2} fill="url(#riskHistoryFill)" />
       </AreaChart>
