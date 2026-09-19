@@ -32,7 +32,7 @@ export default function DistrictDashboard() {
         </div>
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: '2fr 1fr', gap: 'var(--spacing-xl)' }}>
+      <div className="split-2-1">
         <div className="flex-col gap-xl">
            <div className="card">
               <div className="flex justify-between">
