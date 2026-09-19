@@ -155,15 +155,10 @@ export default function AlertsCenter() {
 
                  <div className="card">
                     <h3 style={{ fontSize: '1rem', marginBottom: 'var(--spacing-md)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Smartphone size={16} /> SMS Preview</h3>
-                    <div style={{ border: '12px solid #1F2937', borderRadius: '36px', height: '400px', width: '200px', margin: '0 auto', position: 'relative', overflow: 'hidden', backgroundColor: 'white' }}>
-                       <div style={{ position: 'absolute', top: 0, width: '100%', height: '24px', backgroundColor: '#1F2937', display: 'flex', justifyContent: 'center' }}>
-                          <div style={{ width: '40%', height: '12px', backgroundColor: 'black', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}></div>
-                       </div>
-                       <div style={{ padding: 'var(--spacing-lg) var(--spacing-sm)', height: '100%', backgroundColor: '#F3F4F6' }}>
-                          <div style={{ textAlign: 'center', fontSize: '0.65rem', color: 'var(--color-text-tertiary)', marginBottom: 'var(--spacing-sm)' }}>Zero Bite</div>
-                          <div style={{ backgroundColor: '#E5E7EB', padding: 'var(--spacing-sm)', borderRadius: 'var(--radius-md)', fontSize: '0.75rem', color: 'var(--color-text-primary)' }}>
-                             Attention: High rainfall predicted for Musanze over next 3 days...
-                          </div>
+                    <div style={{ maxWidth: '260px', margin: '0 auto', backgroundColor: '#F3F4F6', borderRadius: 'var(--radius-md)', padding: 'var(--spacing-md)' }}>
+                       <div style={{ textAlign: 'center', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-sm)' }}>Zero Bite</div>
+                       <div style={{ backgroundColor: '#E5E7EB', padding: 'var(--spacing-sm) var(--spacing-md)', borderRadius: 'var(--radius-md)', fontSize: '0.875rem', lineHeight: 1.5, color: 'var(--color-text-primary)' }}>
+                          Attention: High rainfall predicted for Musanze over next 3 days...
                        </div>
                     </div>
                  </div>
