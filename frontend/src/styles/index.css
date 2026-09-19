@@ -152,3 +152,41 @@ button {
 .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
 .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
 .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* Shared responsive split layouts: main content + side panel(s).
+   Used wherever a page hand-rolled `gridTemplateColumns: '2fr 1fr'`
+   or similar, so the collapse-to-1-column breakpoint lives in one
+   place instead of being repeated (and possibly forgotten) per page. */
+.split-2-1 {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--spacing-xl);
+}
+
+.split-1-2-1 {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: var(--spacing-xl);
+}
+
+.hide-on-mobile { display: initial; }
+.show-on-mobile { display: none; }
+
+@media (max-width: 1024px) {
+  .grid-cols-4 { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .container { padding: 0 var(--spacing-md); }
+
+  .grid-cols-2,
+  .grid-cols-3,
+  .grid-cols-4,
+  .split-2-1,
+  .split-1-2-1 {
+    grid-template-columns: 1fr;
+  }
+
+  .hide-on-mobile { display: none; }
+  .show-on-mobile { display: initial; }
+}
