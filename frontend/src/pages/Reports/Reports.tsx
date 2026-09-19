@@ -1,4 +1,4 @@
-import { Clock, BarChart2, FileText, Printer, Share2, Download, CheckSquare, Square, MapPin } from 'lucide-react';
+import { Clock, BarChart2, FileText, Printer, Share2, Download, CheckSquare, Square, MapPin, Landmark } from 'lucide-react';
 import SixMonthTrendChart from '../../components/charts/SixMonthTrendChart';
 
 export default function Reports() {
@@ -93,7 +93,9 @@ export default function Reports() {
          <div style={{ backgroundColor: 'white', padding: 'var(--spacing-2xl)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-md)', flex: 1, margin: '0 auto', width: '100%', maxWidth: '800px', border: '1px solid var(--color-border)' }}>
             <div className="flex justify-between items-start" style={{ marginBottom: 'var(--spacing-2xl)', borderBottom: '2px solid var(--color-border)', paddingBottom: 'var(--spacing-lg)' }}>
                <div className="flex gap-md items-center">
-                  <div style={{ width: '60px', height: '60px', borderRadius: '50%', border: '2px solid #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>🇷🇼</div>
+                  <div style={{ width: '60px', height: '60px', borderRadius: '50%', border: '2px solid #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-secondary)' }}>
+                     <Landmark size={26} />
+                  </div>
                   <div>
                      <h1 style={{ fontSize: '1.25rem', margin: 0 }}>REPUBLIC OF RWANDA</h1>
                      <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-secondary)' }}>MINISTRY OF HEALTH • MALARIA DIVISION</div>
@@ -118,15 +120,15 @@ export default function Reports() {
                <h2 style={{ fontSize: '1.125rem', borderLeft: '4px solid var(--color-primary)', paddingLeft: '0.5rem', marginBottom: 'var(--spacing-md)' }}>District Risk Comparison</h2>
                <div className="grid grid-cols-3 gap-md">
                   <div style={{ backgroundColor: '#F3F4F6', padding: 'var(--spacing-md)', borderRadius: 'var(--radius-sm)', textAlign: 'center' }}>
-                     <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: '0.25rem' }}>TOTAL DISTRICTS</div>
+                     <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: '0.25rem' }}>TOTAL DISTRICTS</div>
                      <div style={{ fontSize: '2rem', fontWeight: 700 }}>30</div>
                   </div>
                   <div style={{ backgroundColor: '#FDE8E8', padding: 'var(--spacing-md)', borderRadius: 'var(--radius-sm)', textAlign: 'center' }}>
-                     <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', fontWeight: 600, color: 'var(--color-risk-critical)', marginBottom: '0.25rem' }}>HIGH RISK (ZONE 1)</div>
+                     <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 600, color: 'var(--color-risk-critical)', marginBottom: '0.25rem' }}>HIGH RISK (ZONE 1)</div>
                      <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--color-risk-critical)' }}>08</div>
                   </div>
                   <div style={{ backgroundColor: '#FEF0E6', padding: 'var(--spacing-md)', borderRadius: 'var(--radius-sm)', textAlign: 'center' }}>
-                     <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', fontWeight: 600, color: 'var(--color-risk-high)', marginBottom: '0.25rem' }}>MOD. RISK (ZONE 2)</div>
+                     <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 600, color: 'var(--color-risk-high)', marginBottom: '0.25rem' }}>MOD. RISK (ZONE 2)</div>
                      <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--color-risk-high)' }}>14</div>
                   </div>
                </div>
