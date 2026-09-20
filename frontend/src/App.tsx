@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import DocumentTitle from './components/DocumentTitle';
 import PublicLayout from './layouts/PublicLayout';
 import MainDashboardLayout from './layouts/MainDashboardLayout';
@@ -7,6 +7,7 @@ import About from './pages/About/About';
 import Dashboards from './pages/Dashboards/Dashboards';
 import Contact from './pages/Contact/Contact';
 import Login from './pages/Login/Login';
+import NotFound from './pages/NotFound/NotFound';
 import NationalDashboard from './pages/NationalDashboard/NationalDashboard';
 
 import DistrictDashboard from './pages/DistrictDashboard/DistrictDashboard';
@@ -30,6 +31,7 @@ export default function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/public" element={<PublicDashboard />} />
+          <Route path="*" element={<NotFound />} />
         </Route>
 
         {/* Authenticated Dashboard Routes */}
@@ -42,9 +44,6 @@ export default function App() {
           <Route path="/reports" element={<Reports />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
-
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
