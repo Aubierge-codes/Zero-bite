@@ -1,6 +1,18 @@
+import { useState } from 'react';
 import { MapPin, Clock, CheckCircle, AlertTriangle, Users, Info, Calendar, Send, Eye, Droplets, Link, Bell } from 'lucide-react';
 
+const initialGoals = [
+  { id: 1, title: 'Contact 12 Village Leaders', detail: '3/12 completed', done: true },
+  { id: 2, title: 'Distribute SMS Alert', detail: 'Broadcasted at 08:45 AM', done: true },
+];
+
 export default function WorkerDashboard() {
+  const [goals, setGoals] = useState(initialGoals);
+
+  const toggleGoal = (id: number) => {
+    setGoals((prev) => prev.map((g) => (g.id === id ? { ...g, done: !g.done } : g)));
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center" style={{ marginBottom: 'var(--spacing-xl)', flexWrap: 'wrap', gap: 'var(--spacing-md)' }}>
@@ -28,20 +40,19 @@ export default function WorkerDashboard() {
            
            <div className="card">
               <h3 style={{ fontSize: '1rem', marginBottom: 'var(--spacing-md)' }}>Today's Goals</h3>
-              <div className="flex items-start gap-sm" style={{ marginBottom: 'var(--spacing-sm)' }}>
-                 <input type="radio" checked readOnly style={{ marginTop: '4px' }} />
-                 <div>
-                    <div style={{ fontWeight: 500, fontSize: '0.875rem' }}>Contact 12 Village Leaders</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)' }}>3/12 completed</div>
-                 </div>
-              </div>
-              <div className="flex items-start gap-sm">
-                 <input type="radio" checked readOnly style={{ marginTop: '4px' }} />
-                 <div>
-                    <div style={{ fontWeight: 500, fontSize: '0.875rem' }}>Distribute SMS Alert</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)' }}>Broadcasted at 08:45 AM</div>
-                 </div>
-              </div>
+              {goals.map((goal, i) => (
+                 <label
+                    key={goal.id}
+                    className="flex items-start gap-sm"
+                    style={{ marginBottom: i < goals.length - 1 ? 'var(--spacing-sm)' : 0, cursor: 'pointer' }}
+                 >
+                    <input type="checkbox" checked={goal.done} onChange={() => toggleGoal(goal.id)} style={{ marginTop: '4px' }} />
+                    <div>
+                       <div style={{ fontWeight: 500, fontSize: '0.875rem', textDecoration: goal.done ? 'line-through' : 'none', color: goal.done ? 'var(--color-text-secondary)' : 'var(--color-text-primary)' }}>{goal.title}</div>
+                       <div style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)' }}>{goal.detail}</div>
+                    </div>
+                 </label>
+              ))}
            </div>
            
            <div className="card" style={{ backgroundColor: '#FFF8E1', borderColor: '#FDE68A' }}>
