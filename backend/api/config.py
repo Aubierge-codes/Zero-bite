@@ -12,6 +12,12 @@ class Settings(BaseSettings):
     SECRET_KEY: str  = "change-me"
     API_VERSION: str = "v1"
 
+    # ── CORS ──────────────────────────────────────────────────────────────────
+    # Comma-separated list of allowed origins. Defaults cover the Vite dev
+    # server (localhost and 127.0.0.1, both default to :5173). Set CORS_ORIGINS
+    # in .env for staging/production frontend origins.
+    CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
+
     # ── Database ──────────────────────────────────────────────────────────────
     # SQLite by default so `uvicorn api.main:app --reload` works right after a
     # fresh clone with no extra services running. Set DATABASE_URL in .env to
@@ -76,6 +82,10 @@ class Settings(BaseSettings):
     @property
     def africastalking_username(self) -> Optional[str]:
         return self.AFRICASTALKING_USERNAME or self.AT_USERNAME or "sandbox"
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
 
     class Config:
         env_file = ".env"
