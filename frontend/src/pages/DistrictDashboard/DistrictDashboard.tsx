@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Search, Settings, MapPin, Thermometer, Droplets, Smartphone, FileText, TrendingUp, Bell, Package, Sparkles, ArrowUpRight } from 'lucide-react';
 import SectorForecastChart from '../../components/charts/SectorForecastChart';
 
@@ -19,6 +20,11 @@ function sectorColor(score: number) {
 }
 
 export default function DistrictDashboard() {
+  const [sectorSearchOpen, setSectorSearchOpen] = useState(false);
+  const [sectorQuery, setSectorQuery] = useState('');
+
+  const visibleSectors = sectors.filter((s) => s.name.toLowerCase().includes(sectorQuery.trim().toLowerCase()));
+
   return (
     <div>
       <div className="page-header" style={{ marginBottom: 'var(--spacing-xl)' }}>
@@ -27,7 +33,7 @@ export default function DistrictDashboard() {
            <span className="badge badge-low" style={{ backgroundColor: '#F3F4F6', color: 'var(--color-text-secondary)' }}>Eastern Province</span>
         </div>
         <div className="flex gap-md">
-          <button className="btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Search size={16} /> Find Sector</button>
+          <button className="btn-outline" onClick={() => setSectorSearchOpen((v) => !v)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Search size={16} /> Find Sector</button>
           <button className="btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Settings size={16} /> Configuration</button>
         </div>
       </div>
@@ -84,9 +90,20 @@ export default function DistrictDashboard() {
               <div className="card">
                  <h3 style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><MapPin size={20} /> Sector Risk Heatmap</h3>
                  <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-md)' }}>Visual distribution of breeding risk across Kayonza</p>
+                 {sectorSearchOpen && (
+                    <input
+                       autoFocus
+                       type="text"
+                       value={sectorQuery}
+                       onChange={(e) => setSectorQuery(e.target.value)}
+                       placeholder="Search sectors..."
+                       style={{ width: '100%', padding: 'var(--spacing-sm) var(--spacing-md)', marginBottom: 'var(--spacing-md)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: '0.875rem' }}
+                    />
+                 )}
                  <div style={{ backgroundColor: '#F9FAFB', minHeight: '250px', borderRadius: 'var(--radius-md)', padding: 'var(--spacing-sm)' }}>
+                    {visibleSectors.length > 0 ? (
                     <div className="grid grid-cols-3 gap-sm">
-                       {sectors.map((s) => {
+                       {visibleSectors.map((s) => {
                           const c = sectorColor(s.score);
                           return (
                              <div key={s.name} style={{ backgroundColor: c.bg, border: `1px solid ${c.border}`, borderRadius: 'var(--radius-sm)', padding: 'var(--spacing-sm)' }}>
@@ -96,6 +113,9 @@ export default function DistrictDashboard() {
                           );
                        })}
                     </div>
+                    ) : (
+                       <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', textAlign: 'center', padding: 'var(--spacing-lg)' }}>No sectors match "{sectorQuery}".</p>
+                    )}
                  </div>
               </div>
               <div className="card">
