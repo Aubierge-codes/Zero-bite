@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 from database.session import get_db
 from database.models import Alert
 from alerts.notification_service import send_sms
+from alerts.schemas import AlertAcknowledgeRequest, CommunitySmsRequest, AlertResolveRequest
 
 router = APIRouter()
 
@@ -132,11 +133,7 @@ async def compose_alert(
 
 
 @router.post("/broadcast-sms")
-async def broadcast_community_sms(
-    message:  str,
-    district: str,
-    zone_id:  Optional[str] = None,
-):
+async def broadcast_community_sms(payload: CommunitySmsRequest):
     """
     Screen 4 — Community Worker 'Send Community SMS' button.
     Sends SMS to all contacts in a zone/district.
@@ -144,13 +141,13 @@ async def broadcast_community_sms(
     try:
         response = await send_sms(
             phone="+250000000000",
-            message=message,
-            district=district,
+            message=payload.message,
+            district=payload.district,
         )
         return {
             "message":  "SMS broadcast sent",
-            "district": district,
-            "zone_id":  zone_id,
+            "district": payload.district,
+            "zone_id":  payload.zone_id,
             "response": response,
         }
     except Exception as e:
@@ -221,20 +218,28 @@ async def alert_templates():
 # ── Alert lifecycle ────────────────────────────────────────────────────────────
 
 @router.post("/{alert_id}/acknowledge")
-async def acknowledge_alert(alert_id: str, db: AsyncSession = Depends(get_db)):
+async def acknowledge_alert(
+    alert_id: str,
+    payload: AlertAcknowledgeRequest = AlertAcknowledgeRequest(),
+    db: AsyncSession = Depends(get_db),
+):
     alert = await db.get(Alert, alert_id)
     if not alert:
         raise HTTPException(status_code=404, detail="Alert not found")
     alert.status         = "acknowledged"
     alert.acknowledged_at = datetime.utcnow()
+    if payload.notes:
+        alert.response_notes = payload.notes
+    if payload.assigned_team_id:
+        alert.assigned_team_id = payload.assigned_team_id
     await db.commit()
     return {"message": "Alert acknowledged", "alert_id": alert_id}
 
 
 @router.post("/{alert_id}/resolve")
 async def resolve_alert(
-    alert_id:      str,
-    response_notes: Optional[str] = None,
+    alert_id: str,
+    payload: AlertResolveRequest = AlertResolveRequest(),
     db: AsyncSession = Depends(get_db),
 ):
     alert = await db.get(Alert, alert_id)
@@ -242,7 +247,7 @@ async def resolve_alert(
         raise HTTPException(status_code=404, detail="Alert not found")
     alert.status         = "resolved"
     alert.resolved_at    = datetime.utcnow()
-    alert.response_notes = response_notes
+    alert.response_notes = payload.response_notes
     await db.commit()
     return {"message": "Alert resolved", "alert_id": alert_id}
 

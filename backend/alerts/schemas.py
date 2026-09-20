@@ -21,3 +21,13 @@ class AlertResponse(BaseModel):
 class AlertAcknowledgeRequest(BaseModel):
     notes: Optional[str] = None
     assigned_team_id: Optional[str] = None
+
+
+class CommunitySmsRequest(BaseModel):
+    message: str
+    district: str
+    zone_id: Optional[str] = None
+
+
+class AlertResolveRequest(BaseModel):
+    response_notes: Optional[str] = None
