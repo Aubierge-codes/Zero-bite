@@ -13,10 +13,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 class TestRiskPredictor:
 
+    def test_classify_risk_critical(self):
+        from ml.predictor import RiskPredictor
+        predictor = RiskPredictor()
+        assert predictor.classify_risk(0.85) == "CRITICAL"
+
     def test_classify_risk_high(self):
         from ml.predictor import RiskPredictor
         predictor = RiskPredictor()
-        assert predictor.classify_risk(0.85) == "HIGH"
+        assert predictor.classify_risk(0.70) == "HIGH"
 
     def test_classify_risk_moderate(self):
         from ml.predictor import RiskPredictor
