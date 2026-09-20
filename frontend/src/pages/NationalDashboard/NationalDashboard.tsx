@@ -1,4 +1,5 @@
 import { Download, Zap, AlertTriangle, TrendingUp, Users, MapPin, Layers, RefreshCw, Droplet, Wind, CloudRain } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import DistrictRiskMap from '../../components/DistrictRiskMap';
 import RiskTrendChart from '../../components/charts/RiskTrendChart';
 
@@ -148,7 +149,7 @@ export default function NationalDashboard() {
         <div className="card">
           <div className="flex justify-between items-center" style={{ marginBottom: '0.25rem' }}>
             <h3 style={{ margin: 0 }}>District Priority Ranking</h3>
-            <a href="/districts" style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>View All Districts &gt;</a>
+            <Link to="/districts" style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>View All Districts &gt;</Link>
           </div>
           <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-md)' }}>Top districts requiring immediate attention</p>
 
