@@ -3,7 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from database.session import get_db
-from database.models import ModelVersion
+from database.models import ModelVersion, User
+from api.dependencies import require_admin
 
 router = APIRouter()
 
@@ -40,5 +41,5 @@ async def feature_importance(db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/retrain")
-async def trigger_retrain():
+async def trigger_retrain(current_user: User = Depends(require_admin)):
     return {"message": "Retraining queued (requires Celery worker)", "status": "queued"}

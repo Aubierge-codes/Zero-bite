@@ -3,8 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from database.session import get_db
-from database.models import IngestionJob, EnvironmentalFeatures
+from database.models import IngestionJob, EnvironmentalFeatures, User
 from data_pipeline.open_meteo_service import OpenMeteoError, get_weather
+from api.dependencies import require_admin
 
 router = APIRouter()
 
@@ -18,12 +19,12 @@ async def ingestion_status(db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/satellite/trigger")
-async def trigger_satellite():
+async def trigger_satellite(current_user: User = Depends(require_admin)):
     return {"message": "Satellite ingestion triggered (requires Celery + credentials)"}
 
 
 @router.post("/weather/trigger")
-async def trigger_weather():
+async def trigger_weather(current_user: User = Depends(require_admin)):
     return {"message": "Weather ingestion triggered (requires Celery; live Open-Meteo endpoint is /api/v1/data/weather)"}
 
 
