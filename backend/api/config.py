@@ -13,7 +13,10 @@ class Settings(BaseSettings):
     API_VERSION: str = "v1"
 
     # ── Database ──────────────────────────────────────────────────────────────
-    DATABASE_URL:          str = "postgresql+asyncpg://zerobite:password@localhost:5432/zerobite_db"
+    # SQLite by default so `uvicorn api.main:app --reload` works right after a
+    # fresh clone with no extra services running. Set DATABASE_URL in .env to
+    # point at Postgres for staging/production.
+    DATABASE_URL:          str = "sqlite+aiosqlite:///./zerobite_dev.db"
     DATABASE_POOL_SIZE:    int = 10
     DATABASE_MAX_OVERFLOW: int = 20
 
