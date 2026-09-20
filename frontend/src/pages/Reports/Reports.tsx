@@ -1,8 +1,17 @@
+import { useState } from 'react';
 import { Clock, BarChart2, FileText, Printer, Share2, Download, CheckSquare, Square, MapPin, Landmark } from 'lucide-react';
 import SixMonthTrendChart from '../../components/charts/SixMonthTrendChart';
 import styles from './Reports.module.css';
 
+const templates = [
+  { key: 'monthly', icon: Clock, title: 'Monthly Summary', description: 'Detailed view of the last 30 days.' },
+  { key: 'seasonal', icon: BarChart2, title: 'Seasonal Analysis', description: 'Climate trends for the current season.' },
+  { key: 'annual', icon: FileText, title: 'Annual Brief', description: 'High-level executive summary of the year.' },
+];
+
 export default function Reports() {
+  const [activeTemplate, setActiveTemplate] = useState('monthly');
+
   return (
     <div className={styles.layout}>
       {/* Sidebar: Report Builder */}
@@ -16,27 +25,30 @@ export default function Reports() {
          <div style={{ marginBottom: 'var(--spacing-xl)' }}>
             <h3 style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: 'var(--spacing-md)' }}>QUICK TEMPLATES</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
-               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', padding: 'var(--spacing-md)', border: '2px solid var(--color-primary)', borderRadius: 'var(--radius-md)', cursor: 'pointer', backgroundColor: '#FAFAFA' }}>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'var(--color-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Clock size={20} /></div>
-                  <div>
-                     <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>Monthly Summary</div>
-                     <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Detailed view of the last 30 days.</div>
-                  </div>
-               </div>
-               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', padding: 'var(--spacing-md)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#F3F4F6', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><BarChart2 size={20} /></div>
-                  <div>
-                     <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>Seasonal Analysis</div>
-                     <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>Climate trends for the current season.</div>
-                  </div>
-               </div>
-               <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', padding: 'var(--spacing-md)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#F3F4F6', color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FileText size={20} /></div>
-                  <div>
-                     <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>Annual Brief</div>
-                     <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>High-level executive summary of the year.</div>
-                  </div>
-               </div>
+               {templates.map((t) => {
+                  const isActive = activeTemplate === t.key;
+                  const Icon = t.icon;
+                  return (
+                     <button
+                        key={t.key}
+                        onClick={() => setActiveTemplate(t.key)}
+                        style={{
+                           display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', padding: 'var(--spacing-md)',
+                           border: isActive ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                           borderRadius: 'var(--radius-md)', cursor: 'pointer', textAlign: 'left',
+                           backgroundColor: isActive ? '#FAFAFA' : 'transparent',
+                        }}
+                     >
+                        <div style={{ width: '40px', height: '40px', flexShrink: 0, borderRadius: '50%', backgroundColor: isActive ? 'var(--color-primary)' : '#F3F4F6', color: isActive ? 'white' : 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                           <Icon size={20} />
+                        </div>
+                        <div>
+                           <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{t.title}</div>
+                           <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>{t.description}</div>
+                        </div>
+                     </button>
+                  );
+               })}
             </div>
          </div>
 
