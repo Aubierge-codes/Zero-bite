@@ -3,6 +3,7 @@ import PublicLayout from './layouts/PublicLayout';
 import MainDashboardLayout from './layouts/MainDashboardLayout';
 import Landing from './pages/Landing/Landing';
 import About from './pages/About/About';
+import Dashboards from './pages/Dashboards/Dashboards';
 import Login from './pages/Login/Login';
 import NationalDashboard from './pages/NationalDashboard/NationalDashboard';
 
@@ -22,6 +23,7 @@ export default function App() {
         <Route element={<PublicLayout />}>
           <Route path="/" element={<Landing />} />
           <Route path="/about" element={<About />} />
+          <Route path="/dashboards" element={<Dashboards />} />
           <Route path="/login" element={<Login />} />
           <Route path="/public" element={<PublicDashboard />} />
         </Route>

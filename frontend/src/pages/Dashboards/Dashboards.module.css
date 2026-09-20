@@ -1,0 +1,73 @@
+.hero {
+  padding: var(--spacing-2xl) 0;
+  text-align: center;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.heroTitle {
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--spacing-md);
+}
+
+.heroSubtitle {
+  font-size: 1.125rem;
+  color: var(--color-text-secondary);
+  max-width: 640px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.roleRow {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: var(--spacing-2xl);
+  align-items: center;
+  padding: var(--spacing-2xl) 0;
+}
+
+.roleRow:not(:last-child) {
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.roleRow.reverse .roleInfo {
+  order: 2;
+}
+
+.roleRow.reverse .roleFeatures {
+  order: 1;
+}
+
+.featureList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.featureList li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  font-size: 0.9375rem;
+}
+
+@media (max-width: 900px) {
+  .heroTitle {
+    font-size: 2.25rem;
+  }
+
+  .roleRow,
+  .roleRow.reverse .roleInfo,
+  .roleRow.reverse .roleFeatures {
+    grid-template-columns: 1fr;
+    order: initial;
+  }
+
+  .roleRow {
+    display: flex;
+    flex-direction: column;
+  }
+}
