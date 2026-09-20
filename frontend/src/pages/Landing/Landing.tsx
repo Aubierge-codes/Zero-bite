@@ -1,6 +1,6 @@
 import styles from './Landing.module.css';
 import { useNavigate } from 'react-router-dom';
-import { Satellite, Brain, Smartphone, CheckCircle2, Bot, ArrowUp, Landmark, Building2, Stethoscope, Globe, Shield, Droplets, Scissors, Clock, ArrowRight, Info } from 'lucide-react';
+import { Satellite, Brain, Smartphone, CheckCircle2, Bot, ArrowUp, Landmark, Building2, Stethoscope, Globe, Shield, Droplets, Scissors, Clock, ArrowRight, Info, GraduationCap, RadioTower, Download } from 'lucide-react';
 import RwandaHeroMap from '../../components/RwandaHeroMap';
 import RoleCard from '../../components/RoleCard';
 
@@ -16,6 +16,19 @@ const preventionTips = [
   { icon: <Droplets size={20} />, title: 'Clear Water', description: 'Empty out or cover all standing water near your dwelling.' },
   { icon: <Scissors size={20} />, title: 'Bush Clearing', description: 'Keep grass short and clear dense vegetation around dwellings.' },
   { icon: <Clock size={20} />, title: 'Peak Exposure', description: 'Avoid being outdoors during peak biting times (dusk till dawn).' },
+];
+
+const trustStats = [
+  { value: '94%', label: 'Prediction Accuracy' },
+  { value: '12m', label: 'Data Latency' },
+  { value: '30+', label: 'Districts Monitored' },
+];
+
+const partners = [
+  { icon: <Satellite size={22} />, name: 'European Space Agency' },
+  { icon: <Landmark size={22} />, name: 'Ministry of Health' },
+  { icon: <GraduationCap size={22} />, name: 'University of Rwanda' },
+  { icon: <RadioTower size={22} />, name: 'SMS Delivery Network' },
 ];
 
 const roles = [
@@ -222,6 +235,46 @@ export default function Landing() {
                 <span>Zero Bite is a free service provided in partnership with the Ministry of Health. Standard SMS rates may apply. You can unsubscribe by texting STOP.</span>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Through Science */}
+      <section className={styles.section}>
+        <div className="container">
+          <h2 className={styles.sectionTitle}>Trust Through Science</h2>
+          <p className={styles.sectionSubtitle}>
+            Our models are trained on 15 years of historical Rwandan epidemiological data and validated against high-resolution satellite imagery from the European Space Agency.
+          </p>
+
+          <div className="grid grid-cols-3 gap-lg" style={{ marginBottom: 'var(--spacing-2xl)', textAlign: 'center' }}>
+            {trustStats.map((stat) => (
+              <div key={stat.label}>
+                <div style={{ fontSize: '3rem', fontWeight: 800 }}>{stat.value}</div>
+                <div style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{stat.label}</div>
+              </div>
+            ))}
+          </div>
+
+          <p style={{ textAlign: 'center', fontSize: '0.75rem', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 'var(--spacing-lg)' }}>
+            Our Research &amp; Delivery Partners
+          </p>
+          <div className="flex justify-center gap-xl" style={{ flexWrap: 'wrap', marginBottom: 'var(--spacing-2xl)' }}>
+            {partners.map((partner) => (
+              <div key={partner.name} title={partner.name} style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#F0F4F8', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-secondary)' }}>
+                {partner.icon}
+              </div>
+            ))}
+          </div>
+
+          <div className="card flex justify-between items-center" style={{ backgroundColor: 'var(--color-primary)', color: 'white', border: 'none', flexWrap: 'wrap', gap: 'var(--spacing-lg)' }}>
+            <div>
+              <h3 style={{ fontSize: '1.125rem', marginBottom: '0.25rem' }}>2023 National Climate-Health Report</h3>
+              <p style={{ fontSize: '0.875rem', color: '#D1D5DB' }}>Download the comprehensive analysis on how AI is transforming outbreak prevention in Rwanda.</p>
+            </div>
+            <button style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: 'var(--spacing-sm) var(--spacing-lg)', borderRadius: 'var(--radius-md)', backgroundColor: 'white', color: 'var(--color-primary)', fontWeight: 600, flexShrink: 0 }}>
+              <Download size={16} /> Download PDF (14.2 MB)
+            </button>
           </div>
         </div>
       </section>
