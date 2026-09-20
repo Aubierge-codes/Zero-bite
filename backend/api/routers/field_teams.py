@@ -5,7 +5,8 @@ from typing import Optional
 from datetime import datetime
 
 from database.session import get_db
-from database.models import FieldTeam, TreatmentRecord
+from database.models import FieldTeam, TreatmentRecord, TeamAssignment
+from field_teams.schemas import TeamCreate, AssignmentCreate, TreatmentRecordCreate
 
 router = APIRouter()
 
@@ -23,41 +24,39 @@ async def list_teams(status: Optional[str] = None, db: AsyncSession = Depends(ge
 
 
 @router.post("/")
-async def create_team(
-    name: str, leader_name: str, leader_phone: str,
-    district: str, team_size: int = 4, specialization: str = "general",
-    db: AsyncSession = Depends(get_db),
-):
-    team = FieldTeam(name=name, leader_name=leader_name, leader_phone=leader_phone,
-                     district=district, team_size=team_size, specialization=specialization)
+async def create_team(payload: TeamCreate, db: AsyncSession = Depends(get_db)):
+    team = FieldTeam(
+        name=payload.name, leader_name=payload.leader_name, leader_phone=payload.leader_phone,
+        district=payload.district, team_size=payload.team_size, specialization=payload.specialization,
+    )
     db.add(team)
     await db.commit()
     return {"message": "Team created", "id": str(team.id)}
 
 
 @router.post("/{team_id}/assign")
-async def assign_team(team_id: str, zone_id: str, task_type: str = "larviciding",
-                      db: AsyncSession = Depends(get_db)):
+async def assign_team(team_id: str, payload: AssignmentCreate, db: AsyncSession = Depends(get_db)):
     team = await db.get(FieldTeam, team_id)
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
+
+    assignment = TeamAssignment(
+        team_id=team_id, zone_id=payload.zone_id,
+        task_type=payload.task_type, priority=payload.priority, notes=payload.notes,
+    )
+    db.add(assignment)
     team.status = "deployed"
     await db.commit()
-    return {"message": f"Team {team.name} assigned to zone {zone_id}"}
+    return {"message": f"Team {team.name} assigned to zone {payload.zone_id}", "assignment_id": str(assignment.id)}
 
 
 @router.post("/{team_id}/treatment-log")
-async def log_treatment(
-    team_id: str, zone_id: str, latitude: float, longitude: float,
-    larvicide_ml_used: float, site_type: str,
-    larvae_before: int = 0, larvae_after: int = 0,
-    db: AsyncSession = Depends(get_db),
-):
+async def log_treatment(team_id: str, payload: TreatmentRecordCreate, db: AsyncSession = Depends(get_db)):
     record = TreatmentRecord(
-        team_id=team_id, zone_id=zone_id, latitude=latitude, longitude=longitude,
-        larvicide_ml_used=larvicide_ml_used, site_type=site_type,
-        larvae_count_before=larvae_before, larvae_count_after=larvae_after,
-        treated_at=datetime.utcnow(),
+        team_id=team_id, zone_id=payload.zone_id, latitude=payload.latitude, longitude=payload.longitude,
+        larvicide_ml_used=payload.larvicide_ml_used, site_type=payload.site_type,
+        larvae_count_before=payload.larvae_count_before, larvae_count_after=payload.larvae_count_after,
+        notes=payload.notes, treated_at=datetime.utcnow(),
     )
     db.add(record)
     await db.commit()
