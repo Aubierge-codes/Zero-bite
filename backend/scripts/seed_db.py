@@ -19,7 +19,7 @@ async def seed():
 
     from database.session import AsyncSessionLocal, init_db
     from database.models import (
-        User, RiskZone, FieldTeam, Drone, Alert,
+        User, RiskZone, FieldTeam, Alert,
         GridCell, ActivityLog, ModelVersion
     )
 
@@ -84,19 +84,6 @@ async def seed():
         ]
         for t in teams:
             db.add(t)
-
-        # --- DRONES ---
-        for i in range(1, 6):
-            db.add(Drone(
-                id=str(uuid.uuid4()),
-                name=f"ZB-Drone-{i:02d}",
-                model="DJI Matrice 300 RTK",
-                range_km=15.0,
-                battery_pct=random.uniform(60, 100),
-                status=random.choice(["available", "available", "charging"]),
-                last_gps_lat=-1.9441 + random.uniform(-0.02, 0.02),
-                last_gps_lng=30.0619 + random.uniform(-0.02, 0.02),
-            ))
 
         # --- ALERTS ---
         for zone in zones[:3]:  # High-risk zones get alerts
