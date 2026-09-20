@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Download, Zap, AlertTriangle, TrendingUp, Users, MapPin, Layers, RefreshCw, Droplet, Wind, CloudRain } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import DistrictRiskMap from '../../components/DistrictRiskMap';
@@ -19,6 +20,15 @@ function riskColor(score: number) {
 }
 
 export default function NationalDashboard() {
+  const [showHazardLayers, setShowHazardLayers] = useState(true);
+  const [viewMode, setViewMode] = useState<'score' | 'density'>('score');
+  const [syncing, setSyncing] = useState(false);
+
+  const syncSatelliteData = () => {
+    setSyncing(true);
+    setTimeout(() => setSyncing(false), 1200);
+  };
+
   return (
     <div>
       <div className="page-header" style={{ marginBottom: 'var(--spacing-xl)' }}>
@@ -85,16 +95,20 @@ export default function NationalDashboard() {
           <div className="flex justify-between items-center" style={{ marginBottom: 'var(--spacing-md)' }}>
             <h3 className="flex items-center gap-sm"><span style={{ color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center' }}><MapPin size={20} /></span> District Risk Heatmap</h3>
             <div className="flex gap-sm">
-              <span className="badge badge-moderate" style={{ backgroundColor: '#F3F4F6', color: 'var(--color-text-primary)' }}>Risk Score</span>
-              <span className="badge" style={{ backgroundColor: 'transparent', color: 'var(--color-text-secondary)' }}>Alert Density</span>
+              <button className="badge" onClick={() => setViewMode('score')} style={viewMode === 'score' ? { backgroundColor: '#F3F4F6', color: 'var(--color-text-primary)', cursor: 'pointer' } : { backgroundColor: 'transparent', color: 'var(--color-text-secondary)', cursor: 'pointer' }}>Risk Score</button>
+              <button className="badge" onClick={() => setViewMode('density')} style={viewMode === 'density' ? { backgroundColor: '#F3F4F6', color: 'var(--color-text-primary)', cursor: 'pointer' } : { backgroundColor: 'transparent', color: 'var(--color-text-secondary)', cursor: 'pointer' }}>Alert Density</button>
             </div>
           </div>
-          
+
           <div style={{ flex: 1, backgroundColor: '#F0F4F8', borderRadius: 'var(--radius-md)', minHeight: '400px', position: 'relative', overflow: 'hidden' }}>
-             <DistrictRiskMap />
+             <DistrictRiskMap showHazardLayers={showHazardLayers} />
              <div style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', zIndex: 400 }}>
-                <button className="btn-outline" style={{ backgroundColor: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Layers size={16} /> Toggle Hazard Layers</button>
-                <button className="btn-outline" style={{ backgroundColor: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><RefreshCw size={16} /> Sync Satellite Data</button>
+                <button className="btn-outline" onClick={() => setShowHazardLayers((v) => !v)} style={{ backgroundColor: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                   <Layers size={16} /> {showHazardLayers ? 'Hide' : 'Show'} Hazard Layers
+                </button>
+                <button className="btn-outline" onClick={syncSatelliteData} disabled={syncing} style={{ backgroundColor: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: syncing ? 0.6 : 1 }}>
+                   <RefreshCw size={16} style={syncing ? { animation: 'spin 0.8s linear infinite' } : undefined} /> {syncing ? 'Syncing...' : 'Sync Satellite Data'}
+                </button>
              </div>
           </div>
         </div>

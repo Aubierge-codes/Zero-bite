@@ -28,7 +28,11 @@ const districts = [
   { name: 'Huye', lat: -2.5967, lon: 29.7392, risk: 22 },
 ];
 
-export default function DistrictRiskMap() {
+interface DistrictRiskMapProps {
+  showHazardLayers?: boolean;
+}
+
+export default function DistrictRiskMap({ showHazardLayers = true }: DistrictRiskMapProps) {
   return (
     <MapContainer
       center={[-1.9403, 29.8739]}
@@ -40,7 +44,7 @@ export default function DistrictRiskMap() {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      {districts.map((d) => (
+      {showHazardLayers && districts.map((d) => (
         <CircleMarker
           key={d.name}
           center={[d.lat, d.lon]}
