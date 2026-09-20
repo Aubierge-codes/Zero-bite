@@ -42,9 +42,10 @@ DISTRICT_STATIC = [
     {"district": "Rusizi",     "elevation": 1460, "population_density": 245, "flood_risk_base": 0.65, "river_buffer_m": 150, "depression_index": 0.70},
     {"district": "Ngoma",      "elevation": 1420, "population_density": 232, "flood_risk_base": 0.62, "river_buffer_m": 175, "depression_index": 0.65},
     {"district": "Rutsiro",    "elevation": 1780, "population_density": 260, "flood_risk_base": 0.26, "river_buffer_m": 405, "depression_index": 0.31},
-    {"district": "Kayonza",    "elevation": 1450, "population_density": 176, "flood_risk_base": 0.60, "river_buffer_m": 210, "depression_index": 0.58},
+    {"district": "Nyaruguru",  "elevation": 1900, "population_density": 275, "flood_risk_base": 0.23, "river_buffer_m": 415, "depression_index": 0.29},
 ]
 
-df = pd.DataFrame(DISTRICT_STATIC)
-df.to_csv("training_data/district_static.csv", index=False)
-print(f"✅ Saved static features for {len(df)} districts")
+if __name__ == "__main__":
+    df = pd.DataFrame(DISTRICT_STATIC)
+    df.to_csv("training_data/district_static.csv", index=False)
+    print(f"Saved static features for {len(df)} districts")
