@@ -1,6 +1,6 @@
 import styles from './Landing.module.css';
 import { useNavigate } from 'react-router-dom';
-import { Satellite, Brain, Smartphone, CheckCircle2, Bot, ArrowUp, Landmark, Building2, Stethoscope, Globe } from 'lucide-react';
+import { Satellite, Brain, Smartphone, CheckCircle2, Bot, ArrowUp, Landmark, Building2, Stethoscope, Globe, Shield, Droplets, Scissors, Clock, ArrowRight, Info } from 'lucide-react';
 import RwandaHeroMap from '../../components/RwandaHeroMap';
 import RoleCard from '../../components/RoleCard';
 
@@ -9,6 +9,13 @@ const assistantChecklist = [
   'Get recommendations for community health risks',
   'Draft SMS alerts in Kinyarwanda or English',
   'Understand the data behind risk scores',
+];
+
+const preventionTips = [
+  { icon: <Shield size={20} />, title: 'Mosquito Nets', description: 'Ensure all household members sleep under insecticide-treated nets.' },
+  { icon: <Droplets size={20} />, title: 'Clear Water', description: 'Empty out or cover all standing water near your dwelling.' },
+  { icon: <Scissors size={20} />, title: 'Bush Clearing', description: 'Keep grass short and clear dense vegetation around dwellings.' },
+  { icon: <Clock size={20} />, title: 'Peak Exposure', description: 'Avoid being outdoors during peak biting times (dusk till dawn).' },
 ];
 
 const roles = [
@@ -166,6 +173,55 @@ export default function Landing() {
                 onAction={() => navigate(role.path)}
               />
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Prevention at a Glance + Subscribe */}
+      <section className={styles.section} style={{ backgroundColor: 'var(--color-surface)' }}>
+        <div className="container">
+          <div className={styles.showcaseGrid} style={{ alignItems: 'start' }}>
+            <div>
+              <h2 style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>Prevention at a Glance</h2>
+              <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-xl)' }}>
+                Immediate steps to take based on current national climate trends.
+              </p>
+              <div className="grid grid-cols-2 gap-lg">
+                {preventionTips.map((tip) => (
+                  <div key={tip.title} className="flex gap-md">
+                    <div style={{ color: 'var(--color-text-secondary)', flexShrink: 0 }}>{tip.icon}</div>
+                    <div>
+                      <h4 style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>{tip.title}</h4>
+                      <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>{tip.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <a href="#" className="flex items-center gap-sm" style={{ marginTop: 'var(--spacing-xl)', fontSize: '0.875rem', fontWeight: 600 }}>
+                View full health guide <ArrowRight size={16} />
+              </a>
+            </div>
+
+            <div style={{ backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: 'var(--radius-xl)', padding: 'var(--spacing-xl)' }}>
+              <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Subscribe to Local Alerts</h3>
+              <p style={{ fontSize: '0.875rem', color: '#D1D5DB', marginBottom: 'var(--spacing-lg)', lineHeight: 1.6 }}>
+                Receive real-time SMS alerts in English or Kinyarwanda when risk levels increase in your district.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-md)' }}>
+                <input type="text" placeholder="Full Name" style={{ padding: 'var(--spacing-md)', borderRadius: 'var(--radius-sm)', border: 'none', fontSize: '0.875rem' }} />
+                <input type="tel" placeholder="+250 XXX XXX XXX" style={{ padding: 'var(--spacing-md)', borderRadius: 'var(--radius-sm)', border: 'none', fontSize: '0.875rem' }} />
+                <select style={{ padding: 'var(--spacing-md)', borderRadius: 'var(--radius-sm)', border: 'none', fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
+                  <option>Select District</option>
+                </select>
+              </div>
+              <button style={{ width: '100%', padding: 'var(--spacing-md)', borderRadius: 'var(--radius-sm)', backgroundColor: 'white', color: 'var(--color-primary)', fontWeight: 600 }}>
+                Subscribe Now
+              </button>
+              <div className="flex gap-sm" style={{ marginTop: 'var(--spacing-md)', fontSize: '0.75rem', color: '#9CA3AF', alignItems: 'flex-start' }}>
+                <Info size={14} style={{ marginTop: '2px', flexShrink: 0 }} />
+                <span>Zero Bite is a free service provided in partnership with the Ministry of Health. Standard SMS rates may apply. You can unsubscribe by texting STOP.</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
