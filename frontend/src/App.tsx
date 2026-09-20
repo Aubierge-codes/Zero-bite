@@ -8,6 +8,7 @@ import Dashboards from './pages/Dashboards/Dashboards';
 import Contact from './pages/Contact/Contact';
 import Privacy from './pages/Privacy/Privacy';
 import Terms from './pages/Terms/Terms';
+import Help from './pages/Help/Help';
 import Login from './pages/Login/Login';
 import NotFound from './pages/NotFound/NotFound';
 import NationalDashboard from './pages/NationalDashboard/NationalDashboard';
@@ -33,6 +34,7 @@ export default function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/help" element={<Help />} />
           <Route path="/login" element={<Login />} />
           <Route path="/public" element={<PublicDashboard />} />
           <Route path="*" element={<NotFound />} />

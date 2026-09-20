@@ -54,7 +54,7 @@ export default function PublicLayout() {
              <div className={styles.footerColumn}>
                 <h4>Support</h4>
                 <ul>
-                  <li><a href="#">Help Center</a></li>
+                  <li><Link to="/help">Help Center</Link></li>
                   <li><Link to="/contact">Contact Us</Link></li>
                   <li><Link to="/login">Admin Login</Link></li>
                 </ul>
