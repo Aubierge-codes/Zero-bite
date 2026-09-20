@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import styles from './PublicLayout.module.css';
 
@@ -15,15 +15,15 @@ export default function PublicLayout() {
             <span className={styles.logoText}>Zero Bite</span>
           </div>
           <nav className={`${styles.nav} ${navOpen ? styles.navOpen : ''}`}>
-            <a href="/" onClick={() => setNavOpen(false)}>Home</a>
-            <a href="/about" onClick={() => setNavOpen(false)}>About</a>
-            <a href="/dashboards" onClick={() => setNavOpen(false)}>Dashboards</a>
-            <a href="/reports" onClick={() => setNavOpen(false)}>Reports</a>
-            <a href="/contact" onClick={() => setNavOpen(false)}>Contact</a>
+            <Link to="/" onClick={() => setNavOpen(false)}>Home</Link>
+            <Link to="/about" onClick={() => setNavOpen(false)}>About</Link>
+            <Link to="/dashboards" onClick={() => setNavOpen(false)}>Dashboards</Link>
+            <Link to="/reports" onClick={() => setNavOpen(false)}>Reports</Link>
+            <Link to="/contact" onClick={() => setNavOpen(false)}>Contact</Link>
           </nav>
           <div className="flex items-center gap-md">
             <span className={styles.langToggle}>EN / RW</span>
-            <a href="/login" className="btn-primary">Login</a>
+            <Link to="/login" className="btn-primary">Login</Link>
             <button className={styles.menuToggle} onClick={() => setNavOpen((v) => !v)} aria-label="Toggle menu">
               {navOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
