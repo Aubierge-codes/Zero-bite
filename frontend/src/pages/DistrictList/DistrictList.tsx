@@ -23,6 +23,12 @@ function trendColor(risk: number, trend: string) {
 
 export default function DistrictList() {
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>('Gasabo');
+  const [query, setQuery] = useState('');
+
+  const visibleDistricts = districts.filter((d) => {
+    const q = query.trim().toLowerCase();
+    return q === '' || d.name.toLowerCase().includes(q) || d.province.toLowerCase().includes(q);
+  });
 
   return (
     <div className={styles.layout}>
@@ -36,7 +42,13 @@ export default function DistrictList() {
          <div style={{ backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
             <div style={{ padding: 'var(--spacing-md) var(--spacing-lg)', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center' }}>
                <Search size={18} color="var(--color-text-secondary)" />
-               <input type="text" placeholder="Search districts by name or province..." style={{ flex: 1, border: 'none', outline: 'none', padding: '0 var(--spacing-sm)', fontSize: '0.875rem' }} />
+               <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search districts by name or province..."
+                  style={{ flex: 1, border: 'none', outline: 'none', padding: '0 var(--spacing-sm)', fontSize: '0.875rem' }}
+               />
             </div>
 
             <div className={styles.tableWrap}>
@@ -51,7 +63,7 @@ export default function DistrictList() {
                   </tr>
                </thead>
                <tbody>
-                  {districts.map((d, i) => {
+                  {visibleDistricts.map((d, i) => {
                      const TrendIcon = trendIcons[d.trend];
                      const color = trendColor(d.risk, d.trend);
                      return (
@@ -72,6 +84,13 @@ export default function DistrictList() {
                         </tr>
                      );
                   })}
+                  {visibleDistricts.length === 0 && (
+                     <tr>
+                        <td colSpan={5} style={{ padding: 'var(--spacing-2xl)', textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
+                           No districts match "{query}".
+                        </td>
+                     </tr>
+                  )}
                </tbody>
             </table>
             </div>
