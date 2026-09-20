@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Search, MapPin, AlertTriangle, Shield, Droplets, Home, Hospital, Calendar, Thermometer, Info, Circle } from 'lucide-react';
 import FloatingChatBubble from '../../components/FloatingChatBubble';
 
@@ -67,6 +68,12 @@ export default function PublicDashboard() {
       setNotFound(true);
     }
   };
+
+  const [searchParams] = useSearchParams();
+  useEffect(() => {
+    const fromLanding = searchParams.get('district');
+    if (fromLanding) lookup(fromLanding);
+  }, []);
 
   return (
     <div className="container" style={{ padding: 'var(--spacing-2xl) 0' }}>

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import styles from './Landing.module.css';
 import { useNavigate } from 'react-router-dom';
 import { Satellite, Brain, Smartphone, CheckCircle2, Bot, ArrowUp, Landmark, Building2, Stethoscope, Globe, Shield, Droplets, Scissors, Clock, ArrowRight, Info, GraduationCap, RadioTower, Download } from 'lucide-react';
@@ -64,6 +65,12 @@ const roles = [
 
 export default function Landing() {
   const navigate = useNavigate();
+  const [heroQuery, setHeroQuery] = useState('');
+
+  const checkRisk = () => {
+    const params = heroQuery.trim() ? `?district=${encodeURIComponent(heroQuery.trim())}` : '';
+    navigate(`/public${params}`);
+  };
 
   return (
     <div>
@@ -79,8 +86,14 @@ export default function Landing() {
               Predictive risk mapping for climate-driven health crises. Zero Bite gives you the data to act before the outbreak.
             </p>
             <div className={styles.searchBox}>
-              <input type="text" placeholder="Enter your district (e.g., Kayonza)" />
-              <button onClick={() => navigate('/public')}>Check Risk</button>
+              <input
+                type="text"
+                placeholder="Enter your district (e.g., Kayonza)"
+                value={heroQuery}
+                onChange={(e) => setHeroQuery(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') checkRisk(); }}
+              />
+              <button onClick={checkRisk}>Check Risk</button>
             </div>
             <p style={{ fontSize: '0.875rem', color: 'var(--color-text-tertiary)' }}>
               Trusted by <strong>30+ District Health Officers</strong> across Rwanda.
