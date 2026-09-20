@@ -1,13 +1,45 @@
 import styles from './Landing.module.css';
 import { useNavigate } from 'react-router-dom';
-import { Satellite, Brain, Smartphone, CheckCircle2, Bot, ArrowUp } from 'lucide-react';
+import { Satellite, Brain, Smartphone, CheckCircle2, Bot, ArrowUp, Landmark, Building2, Stethoscope, Globe } from 'lucide-react';
 import RwandaHeroMap from '../../components/RwandaHeroMap';
+import RoleCard from '../../components/RoleCard';
 
 const assistantChecklist = [
   'Ask about specific district forecasts',
   'Get recommendations for community health risks',
   'Draft SMS alerts in Kinyarwanda or English',
   'Understand the data behind risk scores',
+];
+
+const roles = [
+  {
+    icon: <Landmark size={22} />,
+    tag: 'MINISTRY',
+    title: 'Ministry Officials',
+    description: 'National level strategic overview and cross-district resource allocation.',
+    path: '/login',
+  },
+  {
+    icon: <Building2 size={22} />,
+    tag: 'DISTRICT',
+    title: 'District Health Officers',
+    description: 'Deep-dive district analytics, sector mapping, and 14-day forecasts.',
+    path: '/login',
+  },
+  {
+    icon: <Stethoscope size={22} />,
+    tag: 'CHW',
+    title: 'CHWs & Village Leaders',
+    description: 'Immediate action plans, SMS alert workflows, and local observation logs.',
+    path: '/login',
+  },
+  {
+    icon: <Globe size={22} />,
+    tag: 'PUBLIC',
+    title: 'General Public',
+    description: 'Personal risk scores, prevention tips, and localized weather symptoms.',
+    path: '/public',
+  },
 ];
 
 export default function Landing() {
@@ -114,6 +146,26 @@ export default function Landing() {
                 <button aria-label="Send"><ArrowUp size={16} /></button>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Who Zero Bite Is For */}
+      <section className={styles.section} style={{ backgroundColor: 'var(--color-surface)' }}>
+        <div className="container">
+          <h2 className={styles.sectionTitle}>Who Zero Bite Is For</h2>
+          <p className={styles.sectionSubtitle}>Tailored dashboards for every level of the health system.</p>
+          <div className="grid grid-cols-4 gap-lg">
+            {roles.map((role) => (
+              <RoleCard
+                key={role.tag}
+                icon={role.icon}
+                tag={role.tag}
+                title={role.title}
+                description={role.description}
+                onAction={() => navigate(role.path)}
+              />
+            ))}
           </div>
         </div>
       </section>
