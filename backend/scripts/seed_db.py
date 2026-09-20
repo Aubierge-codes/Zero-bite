@@ -52,6 +52,23 @@ async def seed():
             ("Kibagabaga", "Kigali", "Gasabo", -1.9100, 30.1200, "LOW", 0.18),
         ]
 
+        # --- RISK ZONES (national spread) ---
+        # region == district here (aggregate_to_district groups by .region), and
+        # the coordinates/scores match what the frontend dashboards already show
+        # as hardcoded demo data, so the numbers stay consistent once the
+        # frontend switches from mocks to these live endpoints.
+        national_zone_data = [
+            ("Ndego Marsh",        "Nyagatare",  "Nyagatare",  -1.2925, 30.3253, "CRITICAL", 0.91),
+            ("Akagera Riverbank",  "Kayonza",    "Kayonza",    -1.8825, 30.6438, "CRITICAL", 0.88),
+            ("Nyabarongo Lowland", "Bugesera",   "Bugesera",   -2.2367, 30.2483, "CRITICAL", 0.82),
+            ("Volcanoes Foothill", "Musanze",    "Musanze",    -1.4998, 29.6344, "HIGH",     0.78),
+            ("Mulindi Wetland",    "Gicumbi",    "Gicumbi",    -1.6939, 30.0692, "HIGH",     0.75),
+            ("Kivu Shoreline",     "Nyamasheke", "Nyamasheke", -2.3583, 29.1167, "HIGH",     0.68),
+            ("Gisenyi Basin",      "Rubavu",     "Rubavu",     -1.6939, 29.2569, "MODERATE", 0.64),
+            ("Huye Dry Plateau",   "Huye",       "Huye",       -2.5967, 29.7392, "LOW",      0.22),
+        ]
+        zone_data += national_zone_data
+
         zones = []
         for name, region, district, lat, lon, level, score in zone_data:
             z = RiskZone(
