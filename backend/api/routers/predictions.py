@@ -17,9 +17,9 @@ from data_pipeline.open_meteo_service import get_weather
 RWANDA_DISTRICTS = [
     "Bugesera", "Gatsibo", "Kayonza", "Kirehe", "Nyagatare", "Rwamagana",
     "Huye", "Gisagara", "Kamonyi", "Muhanga", "Nyamagabe", "Nyamasheke",
-    "Nyanza", "Ruhango", "Gakenke", "Gicumbi", "Burera", "Musanze",
+    "Nyanza", "Ruhango", "Nyaruguru", "Gakenke", "Gicumbi", "Burera", "Musanze",
     "Ngororero", "Nyabihu", "Rubavu", "Rulindo", "Karongi", "Nyarugenge",
-    "Gasabo", "Kicukiro", "Rusizi", "Ngoma", "Rutsiro", "Ngororero",
+    "Gasabo", "Kicukiro", "Rusizi", "Ngoma", "Rutsiro",
 ]
 
 router = APIRouter()
@@ -528,11 +528,11 @@ def _get_province(district: str) -> str:
         "Kirehe": "Eastern", "Ngoma": "Eastern", "Nyagatare": "Eastern",
         "Rwamagana": "Eastern", "Huye": "Southern", "Gisagara": "Southern",
         "Kamonyi": "Southern", "Muhanga": "Southern", "Nyamagabe": "Southern",
-        "Nyamasheke": "Southern", "Nyanza": "Southern", "Ruhango": "Southern",
+        "Nyaruguru": "Southern", "Nyanza": "Southern", "Ruhango": "Southern",
         "Gakenke": "Northern", "Gicumbi": "Northern", "Burera": "Northern",
         "Musanze": "Northern", "Ngororero": "Western", "Nyabihu": "Western",
         "Rubavu": "Western", "Rulindo": "Northern", "Karongi": "Western",
         "Nyarugenge": "Kigali", "Gasabo": "Kigali", "Kicukiro": "Kigali",
-        "Rusizi": "Western", "Rutsiro": "Western",
+        "Rusizi": "Western", "Rutsiro": "Western", "Nyamasheke": "Western",
     }
     return PROVINCES.get(district, "Rwanda")
