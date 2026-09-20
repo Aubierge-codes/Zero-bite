@@ -73,7 +73,7 @@ export default function PublicLayout() {
           <div className="container flex justify-between items-center">
             <span>© 2024 Zero Bite Rwanda. Powered by AI and Satellite Data.</span>
             <div className="flex gap-md">
-              <a href="#">Privacy Policy</a>
+              <Link to="/privacy">Privacy Policy</Link>
               <a href="#">Terms of Service</a>
               <span>English (UK)</span>
             </div>
