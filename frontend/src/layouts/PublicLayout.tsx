@@ -55,14 +55,14 @@ export default function PublicLayout() {
                 <h4>Support</h4>
                 <ul>
                   <li><a href="#">Help Center</a></li>
-                  <li><a href="#">Contact Us</a></li>
-                  <li><a href="/login">Admin Login</a></li>
+                  <li><Link to="/contact">Contact Us</Link></li>
+                  <li><Link to="/login">Admin Login</Link></li>
                 </ul>
              </div>
              <div className={styles.footerColumn}>
                 <h4>Platform</h4>
                 <ul>
-                  <li><a href="/public">Public Dashboard</a></li>
+                  <li><Link to="/public">Public Dashboard</Link></li>
                   <li><a href="#">SMS Subscription</a></li>
                   <li><a href="#">API Access</a></li>
                 </ul>
