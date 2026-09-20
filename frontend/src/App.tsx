@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import DocumentTitle from './components/DocumentTitle';
 import PublicLayout from './layouts/PublicLayout';
 import MainDashboardLayout from './layouts/MainDashboardLayout';
 import Landing from './pages/Landing/Landing';
@@ -19,6 +20,7 @@ import Settings from './pages/Settings/Settings';
 export default function App() {
   return (
     <BrowserRouter>
+      <DocumentTitle />
       <Routes>
         {/* Public Routes */}
         <Route element={<PublicLayout />}>
