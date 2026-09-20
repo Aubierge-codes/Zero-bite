@@ -322,10 +322,12 @@ async def list_all_districts(db: AsyncSession = Depends(get_db)):
                 "province":    _get_province(d["district"]),
                 "current_risk": round(d["flood_risk_base"] * 100),
                 "risk_level":  "HIGH" if d["flood_risk_base"] > 0.65 else "MODERATE" if d["flood_risk_base"] > 0.35 else "LOW",
-                "trend_7day":  "stable",
+                "trend_7day":  _demo_trend(d["flood_risk_base"]),
             }
             for d in DISTRICT_STATIC
         ]
+
+    trend_by_district = await _compute_district_trends(db)
 
     return [
         {
@@ -335,7 +337,7 @@ async def list_all_districts(db: AsyncSession = Depends(get_db)):
             "risk_level":  d["risk_level"],
             "high_cells":  d["high_cell_count"],
             "total_cells": d["total_cells"],
-            "trend_7day":  "increasing",
+            "trend_7day":  trend_by_district.get(name, "Stable"),
         }
         for name, d in sorted(district_data.items(), key=lambda x: -x[1]["risk_score"])
     ]
@@ -520,6 +522,47 @@ def _get_transmission_stage(risk_score: int) -> str:
     if risk_score >= 65: return "Acceleration"
     if risk_score >= 35: return "Elevation"
     return "Baseline"
+
+
+def _demo_trend(risk_base: float) -> str:
+    """Plausible trend label when there's no ZoneHistory yet to compute a real one from."""
+    if risk_base > 0.6:
+        return "Increasing"
+    if risk_base < 0.3:
+        return "Decreasing"
+    return "Stable"
+
+
+async def _compute_district_trends(db: AsyncSession) -> dict:
+    """
+    Compares each district's earliest vs. latest risk_score in ZoneHistory over
+    the last 7 days to produce a real 'Increasing' / 'Stable' / 'Decreasing'
+    label, instead of a value hardcoded the same for every district.
+    """
+    cutoff = datetime.utcnow() - timedelta(days=7)
+    result = await db.execute(
+        select(RiskZone.district, ZoneHistory.risk_score, ZoneHistory.recorded_at)
+        .join(RiskZone, ZoneHistory.zone_id == RiskZone.id)
+        .where(ZoneHistory.recorded_at >= cutoff)
+        .order_by(ZoneHistory.recorded_at.asc())
+    )
+
+    scores_by_district: dict = {}
+    for district, score, _recorded_at in result.all():
+        scores_by_district.setdefault(district, []).append(score or 0)
+
+    trends = {}
+    for district, scores in scores_by_district.items():
+        if len(scores) < 2 or scores[0] == 0:
+            continue
+        pct_change = (scores[-1] - scores[0]) / scores[0] * 100
+        if pct_change > 3:
+            trends[district] = "Increasing"
+        elif pct_change < -3:
+            trends[district] = "Decreasing"
+        else:
+            trends[district] = "Stable"
+    return trends
 
 
 def _get_province(district: str) -> str:
