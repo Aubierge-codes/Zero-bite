@@ -9,8 +9,20 @@ const templates = [
   { key: 'annual', icon: FileText, title: 'Annual Brief', description: 'High-level executive summary of the year.' },
 ];
 
+const allIndicators = ['Malaria Risk Index', 'Disaster Probability', 'Resource Availability', 'CHW Intervention Logs', 'Meteorological Data'];
+
 export default function Reports() {
   const [activeTemplate, setActiveTemplate] = useState('monthly');
+  const [selectedIndicators, setSelectedIndicators] = useState(new Set(['Malaria Risk Index', 'Disaster Probability', 'CHW Intervention Logs']));
+
+  const toggleIndicator = (indicator: string) => {
+    setSelectedIndicators((prev) => {
+      const next = new Set(prev);
+      if (next.has(indicator)) next.delete(indicator);
+      else next.add(indicator);
+      return next;
+    });
+  };
 
   return (
     <div className={styles.layout}>
@@ -75,11 +87,15 @@ export default function Reports() {
             <div style={{ marginBottom: 'var(--spacing-xl)' }}>
                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem', alignItems: 'center', gap: '0.5rem' }}><BarChart2 size={16} /> Data Indicators</label>
                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.875rem' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><CheckSquare size={16} color="var(--color-primary)" /> Malaria Risk Index</label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><CheckSquare size={16} color="var(--color-primary)" /> Disaster Probability</label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Square size={16} color="var(--color-text-secondary)" /> Resource Availability</label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><CheckSquare size={16} color="var(--color-primary)" /> CHW Intervention Logs</label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Square size={16} color="var(--color-text-secondary)" /> Meteorological Data</label>
+                  {allIndicators.map((indicator) => {
+                     const checked = selectedIndicators.has(indicator);
+                     return (
+                        <label key={indicator} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }} onClick={() => toggleIndicator(indicator)}>
+                           {checked ? <CheckSquare size={16} color="var(--color-primary)" /> : <Square size={16} color="var(--color-text-secondary)" />}
+                           {indicator}
+                        </label>
+                     );
+                  })}
                </div>
             </div>
 
