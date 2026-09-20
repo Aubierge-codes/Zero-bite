@@ -1,4 +1,5 @@
-import { Search, Filter, Save, Send, MonitorSmartphone, Smartphone, MessageSquare, Bot, AlertTriangle } from 'lucide-react';
+import { useState } from 'react';
+import { Search, Filter, Save, Send, MonitorSmartphone, Smartphone, MessageSquare, Bot, AlertTriangle, Construction } from 'lucide-react';
 import styles from './AlertsCenter.module.css';
 
 const composeTabs = [
@@ -8,6 +9,8 @@ const composeTabs = [
 ];
 
 export default function AlertsCenter() {
+  const [activeTab, setActiveTab] = useState('Compose Message');
+
   return (
     <div className={styles.layout}>
       {/* Sidebar: Alerts Inbox */}
@@ -91,15 +94,16 @@ export default function AlertsCenter() {
            </div>
 
            <div className="flex gap-md" style={{ marginBottom: 'var(--spacing-xl)', borderBottom: '1px solid var(--color-border)' }}>
-              {composeTabs.map(({ label, icon: Icon }, i) => (
+              {composeTabs.map(({ label, icon: Icon }) => (
                  <button
                     key={label}
+                    onClick={() => setActiveTab(label)}
                     className="flex items-center gap-sm"
                     style={{
                        padding: 'var(--spacing-sm) var(--spacing-md)',
-                       fontWeight: i === 0 ? 600 : 400,
-                       color: i === 0 ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
-                       borderBottom: i === 0 ? '2px solid var(--color-primary)' : '2px solid transparent',
+                       fontWeight: activeTab === label ? 600 : 400,
+                       color: activeTab === label ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+                       borderBottom: activeTab === label ? '2px solid var(--color-primary)' : '2px solid transparent',
                     }}
                  >
                     <Icon size={16} /> {label}
@@ -107,6 +111,15 @@ export default function AlertsCenter() {
               ))}
            </div>
 
+           {activeTab !== 'Compose Message' ? (
+             <div className="card" style={{ textAlign: 'center', padding: 'var(--spacing-2xl)' }}>
+               <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto var(--spacing-md)', color: 'var(--color-text-secondary)' }}>
+                 <Construction size={22} />
+               </div>
+               <h3 style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>{activeTab} is coming soon</h3>
+               <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>This panel isn't built yet. Switch back to Compose Message to draft an alert.</p>
+             </div>
+           ) : (
            <div className="split-2-1">
               {/* Form Area */}
               <div className="flex-col gap-lg">
@@ -182,6 +195,7 @@ export default function AlertsCenter() {
                  </div>
               </div>
            </div>
+           )}
         </div>
       </div>
     </div>
