@@ -1,7 +1,14 @@
 import styles from './Landing.module.css';
 import { useNavigate } from 'react-router-dom';
-import { Satellite, Brain, Smartphone } from 'lucide-react';
+import { Satellite, Brain, Smartphone, CheckCircle2, Bot, ArrowUp } from 'lucide-react';
 import RwandaHeroMap from '../../components/RwandaHeroMap';
+
+const assistantChecklist = [
+  'Ask about specific district forecasts',
+  'Get recommendations for community health risks',
+  'Draft SMS alerts in Kinyarwanda or English',
+  'Understand the data behind risk scores',
+];
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -61,6 +68,51 @@ export default function Landing() {
               <p style={{ color: 'var(--color-text-secondary)', marginTop: '0.5rem' }}>
                 Localized alerts are sent to CHWs and Ministry officials for immediate intervention.
               </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* AI Assistant Showcase */}
+      <section className={styles.section}>
+        <div className="container">
+          <div className={styles.showcaseGrid}>
+            <div>
+              <div className="badge badge-low" style={{ marginBottom: '1rem' }}>Virtual Assistant</div>
+              <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Your 24/7 Climate Intelligence Partner</h2>
+              <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.125rem', lineHeight: 1.6 }}>
+                The Zero Bite AI Assistant understands the complex relationships between rainfall, temperature, and vector breeding. Get instant insights in your language.
+              </p>
+              <ul className={styles.checklist}>
+                {assistantChecklist.map((item) => (
+                  <li key={item}>
+                    <CheckCircle2 size={18} color="var(--color-risk-low)" style={{ flexShrink: 0 }} /> {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className={styles.chatCard}>
+              <div className={styles.chatHeader}>
+                <span className={styles.chatAvatar}><Bot size={18} /></span>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>Zero Bite AI Assistant</div>
+                  <div className={styles.chatStatus}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: 'var(--color-risk-low)' }} /> Active • Kinyarwanda
+                  </div>
+                </div>
+              </div>
+              <div className={styles.chatBody}>
+                <div className={styles.chatBubbleUser}>Mwaramutse! How can you help with today's malaria risk assessment?</div>
+                <div className={styles.chatSuggestion}>Why is the risk high in Kayonza today?</div>
+                <div className={styles.chatBubbleAi}>
+                  Risk in <strong>Kayonza</strong> is currently at <strong>78/100</strong> (+15% today). This is driven by a 75% humidity spike combined with stagnant water detected via satellite imagery. Mosquitoes are highly active following recent rainfall in Nyanza village.
+                </div>
+              </div>
+              <div className={styles.chatInputRow}>
+                <input type="text" placeholder="Ask about your district here..." disabled />
+                <button aria-label="Send"><ArrowUp size={16} /></button>
+              </div>
             </div>
           </div>
         </div>
