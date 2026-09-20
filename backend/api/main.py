@@ -3,19 +3,12 @@ Zero_Bite — AI Predictive Mosquito Control System
 Main FastAPI Application
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 from loguru import logger
-
-# Add this import at the top
-from fastapi.security import OAuth2PasswordBearer
-
-# Add this right after you create the app object (after app = FastAPI(...))
-from fastapi.openapi.utils import get_openapi
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 from api.routers import (
     predictions,
@@ -70,6 +63,20 @@ app.include_router(risk_zones.router,       prefix="/api/v1/risk-zones",  tags=[
 app.include_router(field_teams.router,      prefix="/api/v1/field-teams", tags=["Field Teams"])
 app.include_router(data_ingestion.router,   prefix="/api/v1/data",        tags=["Data Ingestion"])
 app.include_router(model_management.router, prefix="/api/v1/model",       tags=["Model Management"])
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    """
+    Catches anything that escapes a router's own error handling so the
+    frontend always gets a consistent JSON error shape instead of an
+    inconsistent 500 (or a raw traceback, depending on what raised it).
+    """
+    logger.exception(f"Unhandled error on {request.method} {request.url.path}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error. Please try again or contact support if it persists."},
+    )
 
 
 @app.get("/health", tags=["Health"])
