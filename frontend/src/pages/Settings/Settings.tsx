@@ -9,15 +9,22 @@ const tabs = [
   { label: 'Localization', icon: Globe },
 ];
 
+const users = [
+  { name: 'Jean-Pierre Kabera', role: 'Ministry', district: 'National', status: 'Active', lastActive: '2 mins ago' },
+  { name: 'Marie Claire Uwase', role: 'District Officer', district: 'Musanze', status: 'Active', lastActive: '1 hour ago' },
+  { name: 'Emmanuel Gisa', role: 'CHW', district: 'Kayonza', status: 'Inactive', lastActive: '2 days ago' },
+  { name: 'Sonia Mukamanzi', role: 'Admin', district: 'Kigali', status: 'Active', lastActive: 'Just now' },
+  { name: 'Aimable Rugamba', role: 'District Officer', district: 'Nyamagabe', status: 'Active', lastActive: '5 hours ago' },
+];
+
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('Users');
-  const users = [
-    { name: 'Jean-Pierre Kabera', role: 'Ministry', district: 'National', status: 'Active', lastActive: '2 mins ago' },
-    { name: 'Marie Claire Uwase', role: 'District Officer', district: 'Musanze', status: 'Active', lastActive: '1 hour ago' },
-    { name: 'Emmanuel Gisa', role: 'CHW', district: 'Kayonza', status: 'Inactive', lastActive: '2 days ago' },
-    { name: 'Sonia Mukamanzi', role: 'Admin', district: 'Kigali', status: 'Active', lastActive: 'Just now' },
-    { name: 'Aimable Rugamba', role: 'District Officer', district: 'Nyamagabe', status: 'Active', lastActive: '5 hours ago' },
-  ];
+  const [query, setQuery] = useState('');
+
+  const visibleUsers = users.filter((u) => {
+    const q = query.trim().toLowerCase();
+    return q === '' || u.name.toLowerCase().includes(q) || u.district.toLowerCase().includes(q);
+  });
 
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
@@ -62,7 +69,13 @@ export default function Settings() {
          <div className="flex justify-between items-center" style={{ padding: 'var(--spacing-lg)', borderBottom: '1px solid var(--color-border)', flexWrap: 'wrap', gap: 'var(--spacing-md)' }}>
             <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#F3F4F6', borderRadius: 'var(--radius-sm)', padding: 'var(--spacing-sm) var(--spacing-md)', width: '100%', maxWidth: '300px' }}>
                <Search size={16} color="var(--color-text-secondary)" />
-               <input type="text" placeholder="Search users by name or district..." style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', padding: '0 var(--spacing-sm)', fontSize: '0.875rem' }} />
+               <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search users by name or district..."
+                  style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', padding: '0 var(--spacing-sm)', fontSize: '0.875rem' }}
+               />
             </div>
             <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Plus size={16} /> Add User</button>
          </div>
@@ -80,7 +93,7 @@ export default function Settings() {
                </tr>
             </thead>
             <tbody>
-               {users.map((u, i) => (
+               {visibleUsers.map((u, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid var(--color-border)' }}>
                      <td style={{ padding: 'var(--spacing-md) var(--spacing-lg)', fontWeight: 500, fontSize: '0.875rem' }}>{u.name}</td>
                      <td style={{ padding: 'var(--spacing-md) var(--spacing-lg)' }}><span className="badge" style={{ backgroundColor: '#F3F4F6', fontWeight: 500, textTransform: 'none' }}>{u.role}</span></td>
@@ -97,6 +110,13 @@ export default function Settings() {
                      </td>
                   </tr>
                ))}
+               {visibleUsers.length === 0 && (
+                  <tr>
+                     <td colSpan={6} style={{ padding: 'var(--spacing-2xl)', textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
+                        No users match "{query}".
+                     </td>
+                  </tr>
+               )}
             </tbody>
          </table>
          </div>
