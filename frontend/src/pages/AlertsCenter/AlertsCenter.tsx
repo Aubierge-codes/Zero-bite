@@ -8,8 +8,33 @@ const composeTabs = [
   { label: 'Fallback Rules', icon: AlertTriangle },
 ];
 
+const statusFilters = ['All', 'Sent', 'Scheduled', 'Failed'] as const;
+
+type Channel = 'sms' | 'dashboard';
+
+const alerts: { id: number; title: string; audience: string; status: string; date: string; channels: Channel[] }[] = [
+  { id: 1, title: 'Malaria Risk Spike: Musanze', audience: 'All CHWs, Musanze District', status: 'Sent', date: '12 Oct, 10:45 AM', channels: ['sms', 'dashboard'] },
+  { id: 2, title: 'Seasonal Rainfall Forecast', audience: 'General Public, Northern Province', status: 'Scheduled', date: '12 Oct, 09:00 AM', channels: ['dashboard'] },
+  { id: 3, title: 'Flood Alert: Ruhengeri Sector', audience: 'Emergency Contacts', status: 'Failed', date: '11 Oct, 04:30 PM', channels: ['sms'] },
+];
+
+function statusBadgeStyle(status: string) {
+  if (status === 'Failed') return { backgroundColor: '#FDE8E8', color: 'var(--color-risk-critical)' };
+  return { backgroundColor: '#F3F4F6', color: 'var(--color-text-secondary)' };
+}
+
 export default function AlertsCenter() {
   const [activeTab, setActiveTab] = useState('Compose Message');
+  const [statusFilter, setStatusFilter] = useState<(typeof statusFilters)[number]>('All');
+  const [query, setQuery] = useState('');
+  const [selectedId, setSelectedId] = useState(1);
+
+  const visibleAlerts = alerts.filter((a) => {
+    const matchesStatus = statusFilter === 'All' || a.status === statusFilter;
+    const q = query.trim().toLowerCase();
+    const matchesQuery = q === '' || a.title.toLowerCase().includes(q) || a.audience.toLowerCase().includes(q);
+    return matchesStatus && matchesQuery;
+  });
 
   return (
     <div className={styles.layout}>
@@ -22,56 +47,61 @@ export default function AlertsCenter() {
            </div>
            <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#F3F4F6', borderRadius: 'var(--radius-sm)', padding: 'var(--spacing-xs) var(--spacing-sm)' }}>
               <Search size={16} color="var(--color-text-secondary)" />
-              <input type="text" placeholder="Search alerts..." style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', padding: 'var(--spacing-xs) var(--spacing-sm)', fontSize: '0.875rem' }} />
+              <input
+                 type="text"
+                 value={query}
+                 onChange={(e) => setQuery(e.target.value)}
+                 placeholder="Search alerts..."
+                 style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', padding: 'var(--spacing-xs) var(--spacing-sm)', fontSize: '0.875rem' }}
+              />
            </div>
         </div>
-        
+
         <div style={{ display: 'flex', gap: 'var(--spacing-sm)', padding: 'var(--spacing-md) var(--spacing-lg)', borderBottom: '1px solid var(--color-border)' }}>
-           <span className="badge" style={{ backgroundColor: 'var(--color-text-primary)', color: 'white' }}>All</span>
-           <span className="badge" style={{ backgroundColor: '#F3F4F6', color: 'var(--color-text-secondary)' }}>Sent</span>
-           <span className="badge" style={{ backgroundColor: '#F3F4F6', color: 'var(--color-text-secondary)' }}>Scheduled</span>
-           <span className="badge" style={{ backgroundColor: '#FDE8E8', color: 'var(--color-risk-critical)' }}>Failed</span>
+           {statusFilters.map((status) => (
+              <button
+                 key={status}
+                 className="badge"
+                 onClick={() => setStatusFilter(status)}
+                 style={statusFilter === status ? { backgroundColor: 'var(--color-text-primary)', color: 'white', cursor: 'pointer' } : { backgroundColor: '#F3F4F6', color: 'var(--color-text-secondary)', cursor: 'pointer' }}
+              >
+                 {status}
+              </button>
+           ))}
         </div>
-        
+
         <div style={{ flex: 1, overflowY: 'auto' }}>
-           {/* Alert Item 1 */}
-           <div style={{ padding: 'var(--spacing-lg)', borderBottom: '1px solid var(--color-border)', backgroundColor: '#F9FAFB', borderLeft: '3px solid var(--color-text-primary)', cursor: 'pointer' }}>
-              <div className="flex justify-between" style={{ marginBottom: '0.25rem' }}>
-                 <h4 style={{ fontSize: '0.875rem', margin: 0 }}>Malaria Risk Spike: Musanze</h4>
-                 <span className="badge" style={{ backgroundColor: '#F3F4F6', color: 'var(--color-text-secondary)' }}>Sent</span>
+           {visibleAlerts.map((alert) => (
+              <div
+                 key={alert.id}
+                 onClick={() => setSelectedId(alert.id)}
+                 style={{
+                    padding: 'var(--spacing-lg)',
+                    borderBottom: '1px solid var(--color-border)',
+                    backgroundColor: selectedId === alert.id ? '#F9FAFB' : 'transparent',
+                    borderLeft: selectedId === alert.id ? '3px solid var(--color-text-primary)' : '3px solid transparent',
+                    cursor: 'pointer',
+                 }}
+              >
+                 <div className="flex justify-between" style={{ marginBottom: '0.25rem' }}>
+                    <h4 style={{ fontSize: '0.875rem', margin: 0 }}>{alert.title}</h4>
+                    <span className="badge" style={statusBadgeStyle(alert.status)}>{alert.status}</span>
+                 </div>
+                 <p style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginBottom: '0.5rem' }}>{alert.audience}</p>
+                 <div className="flex justify-between items-center">
+                    <div className="flex gap-sm" style={{ color: 'var(--color-text-tertiary)' }}>
+                       {alert.channels.includes('sms') && <Smartphone size={14} />}
+                       {alert.channels.includes('dashboard') && <MonitorSmartphone size={14} />}
+                    </div>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)' }}>{alert.date}</span>
+                 </div>
               </div>
-              <p style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginBottom: '0.5rem' }}>All CHWs, Musanze District</p>
-              <div className="flex justify-between items-center">
-                 <div className="flex gap-sm" style={{ color: 'var(--color-text-tertiary)' }}><Smartphone size={14} /> <MonitorSmartphone size={14} /></div>
-                 <span style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)' }}>12 Oct, 10:45 AM</span>
-              </div>
-           </div>
-
-           {/* Alert Item 2 */}
-           <div style={{ padding: 'var(--spacing-lg)', borderBottom: '1px solid var(--color-border)', cursor: 'pointer' }}>
-              <div className="flex justify-between" style={{ marginBottom: '0.25rem' }}>
-                 <h4 style={{ fontSize: '0.875rem', margin: 0 }}>Seasonal Rainfall Forecast</h4>
-                 <span className="badge" style={{ backgroundColor: '#F3F4F6', color: 'var(--color-text-secondary)' }}>Scheduled</span>
-              </div>
-              <p style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginBottom: '0.5rem' }}>General Public, Northern Province</p>
-              <div className="flex justify-between items-center">
-                 <div className="flex gap-sm" style={{ color: 'var(--color-text-tertiary)' }}><MonitorSmartphone size={14} /></div>
-                 <span style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)' }}>12 Oct, 09:00 AM</span>
-              </div>
-           </div>
-
-           {/* Alert Item 3 */}
-           <div style={{ padding: 'var(--spacing-lg)', borderBottom: '1px solid var(--color-border)', cursor: 'pointer' }}>
-              <div className="flex justify-between" style={{ marginBottom: '0.25rem' }}>
-                 <h4 style={{ fontSize: '0.875rem', margin: 0 }}>Flood Alert: Ruhengeri Sector</h4>
-                 <span className="badge badge-critical">Failed</span>
-              </div>
-              <p style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginBottom: '0.5rem' }}>Emergency Contacts</p>
-              <div className="flex justify-between items-center">
-                 <div className="flex gap-sm" style={{ color: 'var(--color-text-tertiary)' }}><Smartphone size={14} /></div>
-                 <span style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)' }}>11 Oct, 04:30 PM</span>
-              </div>
-           </div>
+           ))}
+           {visibleAlerts.length === 0 && (
+              <p style={{ padding: 'var(--spacing-xl)', textAlign: 'center', fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
+                 No alerts match your filters.
+              </p>
+           )}
         </div>
 
         <div style={{ padding: 'var(--spacing-lg)' }}>
