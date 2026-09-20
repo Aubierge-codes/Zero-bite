@@ -1,4 +1,5 @@
-import { Users, Smartphone, Activity, List, Globe, Search, Plus, ShieldCheck, Download, Phone, Settings as SettingsIcon } from 'lucide-react';
+import { useState } from 'react';
+import { Users, Smartphone, Activity, List, Globe, Search, Plus, ShieldCheck, Download, Phone, Settings as SettingsIcon, Construction } from 'lucide-react';
 
 const tabs = [
   { label: 'Users', icon: Users },
@@ -9,6 +10,7 @@ const tabs = [
 ];
 
 export default function Settings() {
+  const [activeTab, setActiveTab] = useState('Users');
   const users = [
     { name: 'Jean-Pierre Kabera', role: 'Ministry', district: 'National', status: 'Active', lastActive: '2 mins ago' },
     { name: 'Marie Claire Uwase', role: 'District Officer', district: 'Musanze', status: 'Active', lastActive: '1 hour ago' },
@@ -20,15 +22,16 @@ export default function Settings() {
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
       <div style={{ marginBottom: 'var(--spacing-xl)' }}>
-        <h2 style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><SettingsIcon size={14} /> System Administration / Users</h2>
+        <h2 style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><SettingsIcon size={14} /> System Administration / {activeTab}</h2>
         <h1 style={{ fontSize: '2rem', margin: '0.25rem 0' }}>Settings &amp; Admin</h1>
         <p style={{ color: 'var(--color-text-secondary)' }}>Manage platform security, technical integrations, and AI risk logic.</p>
       </div>
 
       <div style={{ display: 'flex', overflowX: 'auto', borderBottom: '1px solid var(--color-border)', marginBottom: 'var(--spacing-xl)' }}>
-         {tabs.map(({ label, icon: Icon }, i) => (
+         {tabs.map(({ label, icon: Icon }) => (
             <button
                key={label}
+               onClick={() => setActiveTab(label)}
                style={{
                   padding: 'var(--spacing-md) var(--spacing-xl)',
                   display: 'flex',
@@ -36,9 +39,9 @@ export default function Settings() {
                   gap: '0.5rem',
                   flexShrink: 0,
                   whiteSpace: 'nowrap',
-                  borderBottom: i === 0 ? '2px solid var(--color-primary)' : '2px solid transparent',
-                  fontWeight: i === 0 ? 600 : 400,
-                  color: i === 0 ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+                  borderBottom: activeTab === label ? '2px solid var(--color-primary)' : '2px solid transparent',
+                  fontWeight: activeTab === label ? 600 : 400,
+                  color: activeTab === label ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
                }}
             >
                <Icon size={16} /> {label}
@@ -46,6 +49,15 @@ export default function Settings() {
          ))}
       </div>
 
+      {activeTab !== 'Users' ? (
+        <div className="card" style={{ textAlign: 'center', padding: 'var(--spacing-2xl)', marginBottom: 'var(--spacing-2xl)' }}>
+          <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto var(--spacing-md)', color: 'var(--color-text-secondary)' }}>
+            <Construction size={22} />
+          </div>
+          <h3 style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>{activeTab} configuration is coming soon</h3>
+          <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>This panel isn't built yet. Switch back to Users to manage platform access.</p>
+        </div>
+      ) : (
       <div className="card" style={{ padding: 0, overflow: 'hidden', marginBottom: 'var(--spacing-2xl)' }}>
          <div className="flex justify-between items-center" style={{ padding: 'var(--spacing-lg)', borderBottom: '1px solid var(--color-border)', flexWrap: 'wrap', gap: 'var(--spacing-md)' }}>
             <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#F3F4F6', borderRadius: 'var(--radius-sm)', padding: 'var(--spacing-sm) var(--spacing-md)', width: '100%', maxWidth: '300px' }}>
@@ -89,6 +101,7 @@ export default function Settings() {
          </table>
          </div>
       </div>
+      )}
 
       <div style={{ backgroundColor: '#F9FAFB', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', padding: 'var(--spacing-xl)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--spacing-lg)' }}>
          <div style={{ display: 'flex', gap: 'var(--spacing-lg)', maxWidth: '600px' }}>
