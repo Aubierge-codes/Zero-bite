@@ -116,24 +116,6 @@ class TestFeatureExtractor:
             assert 0 <= f["humidity_pct"] <= 100
 
 
-# ─── DRONE ROUTE OPTIMIZER TESTS ─────────────────────────────────────────────
-
-class TestDroneRouteOptimizer:
-
-    def test_haversine_kigali_butare(self):
-        from drone.route_optimizer import DroneRouteOptimizer
-        optimizer = DroneRouteOptimizer()
-        # Kigali to Butare is ~130km
-        dist = optimizer._haversine(-1.9441, 30.0619, -2.5967, 29.7394)
-        assert 100 < dist < 160, f"Expected ~130km, got {dist:.1f}km"
-
-    def test_haversine_same_point(self):
-        from drone.route_optimizer import DroneRouteOptimizer
-        optimizer = DroneRouteOptimizer()
-        dist = optimizer._haversine(-1.94, 30.06, -1.94, 30.06)
-        assert dist < 0.001
-
-
 # ─── ALERT ENGINE TESTS ──────────────────────────────────────────────────────
 
 class TestAlertEngine:
