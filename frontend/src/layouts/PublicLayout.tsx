@@ -74,7 +74,7 @@ export default function PublicLayout() {
             <span>© 2024 Zero Bite Rwanda. Powered by AI and Satellite Data.</span>
             <div className="flex gap-md">
               <Link to="/privacy">Privacy Policy</Link>
-              <a href="#">Terms of Service</a>
+              <Link to="/terms">Terms of Service</Link>
               <span>English (UK)</span>
             </div>
           </div>

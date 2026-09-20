@@ -7,6 +7,7 @@ const pageTitles: Record<string, string> = {
   '/dashboards': 'Dashboards — Zero Bite',
   '/contact': 'Contact — Zero Bite',
   '/privacy': 'Privacy Policy — Zero Bite',
+  '/terms': 'Terms of Service — Zero Bite',
   '/login': 'Login — Zero Bite',
   '/public': 'Public Risk Portal — Zero Bite',
   '/national': 'National Dashboard — Zero Bite',
