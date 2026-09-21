@@ -49,6 +49,20 @@
   border-color: var(--color-primary);
 }
 
+.formGroup input,
+.formGroup select,
+.formGroup textarea {
+  transition: border-color var(--transition-fast);
+}
+
+.fieldError {
+  display: block;
+  color: var(--color-risk-critical);
+  font-size: 0.8125rem;
+  margin-top: var(--spacing-xs);
+  animation: fadeIn 150ms ease-out;
+}
+
 .infoRow {
   display: flex;
   gap: var(--spacing-md);

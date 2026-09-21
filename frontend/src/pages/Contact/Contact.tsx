@@ -1,4 +1,5 @@
-import { Mail, Phone, MapPin, Clock, Send, Users, Newspaper, LifeBuoy, Handshake } from 'lucide-react';
+import { useState, type FormEvent, type ChangeEvent } from 'react';
+import { Mail, Phone, MapPin, Clock, Send, Users, Newspaper, LifeBuoy, Handshake, CheckCircle2, Loader2 } from 'lucide-react';
 import styles from './Contact.module.css';
 
 const channels = [
@@ -8,7 +9,36 @@ const channels = [
   { icon: <LifeBuoy size={20} />, title: 'Technical Support', email: 'support@zerobite.rw' },
 ];
 
+type FormStatus = 'idle' | 'submitting' | 'success';
+
 export default function Contact() {
+  const [form, setForm] = useState({ name: '', email: '', org: '', subject: '', message: '' });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [status, setStatus] = useState<FormStatus>('idle');
+
+  const updateField = (field: keyof typeof form) => (
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    const nextErrors: Record<string, string> = {};
+    if (!form.name.trim()) nextErrors.name = 'Please tell us your name.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) nextErrors.email = 'Enter a valid email address.';
+    if (!form.message.trim()) nextErrors.message = 'Let us know what you need.';
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
+
+    setStatus('submitting');
+    setTimeout(() => setStatus('success'), 1100);
+  };
+
+  const resetForm = () => {
+    setForm({ name: '', email: '', org: '', subject: '', message: '' });
+    setErrors({});
+    setStatus('idle');
+  };
+
   return (
     <div>
       <section className={styles.hero}>
@@ -24,25 +54,40 @@ export default function Contact() {
       <section className="container" style={{ padding: 'var(--spacing-2xl) 0' }}>
         <div className="split-2-1">
           <div className="card">
+            {status === 'success' ? (
+              <div style={{ textAlign: 'center', padding: 'var(--spacing-2xl) 0', animation: 'scaleIn 300ms ease-out' }}>
+                <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto var(--spacing-md)', color: 'var(--color-risk-low)' }}>
+                  <CheckCircle2 size={28} />
+                </div>
+                <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Message sent</h2>
+                <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-lg)', maxWidth: '360px', margin: '0 auto var(--spacing-lg)' }}>
+                  Thanks, {form.name.split(' ')[0] || 'there'}. Our team usually replies within one business day.
+                </p>
+                <button className="btn-outline" onClick={resetForm}>Send Another Message</button>
+              </div>
+            ) : (
+            <>
             <h2 style={{ fontSize: '1.25rem', marginBottom: 'var(--spacing-lg)' }}>Send Us a Message</h2>
-            <form onSubmit={(e) => e.preventDefault()}>
+            <form onSubmit={handleSubmit} noValidate>
               <div className="grid grid-cols-2 gap-lg">
                 <div className={styles.formGroup}>
                   <label htmlFor="contact-name">Full Name</label>
-                  <input id="contact-name" type="text" placeholder="Jane Uwase" />
+                  <input id="contact-name" type="text" placeholder="Jane Uwase" value={form.name} onChange={updateField('name')} style={errors.name ? { borderColor: 'var(--color-risk-critical)' } : undefined} />
+                  {errors.name && <span className={styles.fieldError}>{errors.name}</span>}
                 </div>
                 <div className={styles.formGroup}>
                   <label htmlFor="contact-email">Email Address</label>
-                  <input id="contact-email" type="email" placeholder="jane@organization.rw" />
+                  <input id="contact-email" type="email" placeholder="jane@organization.rw" value={form.email} onChange={updateField('email')} style={errors.email ? { borderColor: 'var(--color-risk-critical)' } : undefined} />
+                  {errors.email && <span className={styles.fieldError}>{errors.email}</span>}
                 </div>
               </div>
               <div className={styles.formGroup}>
                 <label htmlFor="contact-org">Organization (optional)</label>
-                <input id="contact-org" type="text" placeholder="Ministry of Health, District Office, NGO..." />
+                <input id="contact-org" type="text" placeholder="Ministry of Health, District Office, NGO..." value={form.org} onChange={updateField('org')} />
               </div>
               <div className={styles.formGroup}>
                 <label htmlFor="contact-subject">Subject</label>
-                <select id="contact-subject" defaultValue="">
+                <select id="contact-subject" value={form.subject} onChange={updateField('subject')}>
                   <option value="" disabled>Select a topic</option>
                   <option>District rollout / platform access</option>
                   <option>Partnership or research collaboration</option>
@@ -53,12 +98,19 @@ export default function Contact() {
               </div>
               <div className={styles.formGroup}>
                 <label htmlFor="contact-message">Message</label>
-                <textarea id="contact-message" rows={5} placeholder="Tell us a bit about what you need..." />
+                <textarea id="contact-message" rows={5} placeholder="Tell us a bit about what you need..." value={form.message} onChange={updateField('message')} style={errors.message ? { borderColor: 'var(--color-risk-critical)' } : undefined} />
+                {errors.message && <span className={styles.fieldError}>{errors.message}</span>}
               </div>
-              <button type="submit" className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Send size={16} /> Send Message
+              <button type="submit" className="btn-primary" disabled={status === 'submitting'} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: status === 'submitting' ? 0.7 : 1 }}>
+                {status === 'submitting' ? (
+                  <><Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} /> Sending...</>
+                ) : (
+                  <><Send size={16} /> Send Message</>
+                )}
               </button>
             </form>
+            </>
+            )}
           </div>
 
           <div className="flex-col gap-lg">
