@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import styles from './Landing.module.css';
 import { useNavigate } from 'react-router-dom';
-import { Satellite, Brain, Smartphone, CheckCircle2, Bot, ArrowUp, Landmark, Building2, Stethoscope, Globe, Shield, Droplets, Scissors, Clock, ArrowRight, Info, GraduationCap, RadioTower, Download } from 'lucide-react';
+import {
+  Satellite, Brain, Smartphone, CheckCircle2, Bot, ArrowUp, Landmark, Building2,
+  Stethoscope, Globe, Shield, Droplets, Scissors, Clock, ArrowRight, Info,
+  GraduationCap, RadioTower, Download, AlertTriangle, Search
+} from 'lucide-react';
 import RwandaHeroMap from '../../components/RwandaHeroMap';
 import RoleCard from '../../components/RoleCard';
 
@@ -78,9 +82,7 @@ export default function Landing() {
       <section className={styles.hero}>
         <div className="container" style={{ position: 'relative' }}>
           <div className={styles.heroContent}>
-            <div className="badge badge-low" style={{ marginBottom: '1rem', padding: '0.25rem 0.75rem', fontSize: '0.875rem' }}>
-              Powered by AI & Satellite Data
-            </div>
+         
             <h1 className={styles.heroTitle}>Climate Intelligence for a Malaria-Free Rwanda.</h1>
             <p className={styles.heroSubtitle}>
               Predictive risk mapping for climate-driven health crises. Zero Bite gives you the data to act before the outbreak.
@@ -95,12 +97,23 @@ export default function Landing() {
               />
               <button onClick={checkRisk}>Check Risk</button>
             </div>
-            <p style={{ fontSize: '0.875rem', color: 'var(--color-text-tertiary)' }}>
-              Trusted by <strong>30+ District Health Officers</strong> across Rwanda.
-            </p>
+            <div className={styles.trustRow}>
+              <div className={styles.avatarStack}>
+                <span>DH</span>
+                <span>MK</span>
+                <span>+</span>
+              </div>
+              <p>
+                Trusted by <strong>30+ District Health Officers</strong> across Rwanda.
+              </p>
+            </div>
           </div>
+
           <div className={styles.mapPlaceholder}>
-            <RwandaHeroMap />
+            <div className={styles.mapCard}>
+          
+              <RwandaHeroMap />
+            </div>
           </div>
         </div>
       </section>

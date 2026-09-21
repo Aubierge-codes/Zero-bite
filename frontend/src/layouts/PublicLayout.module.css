@@ -5,9 +5,14 @@
 }
 
 .header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
   padding: var(--spacing-md) 0;
   border-bottom: 1px solid var(--color-border);
-  background-color: var(--color-surface);
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .logo {
