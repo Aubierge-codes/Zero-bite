@@ -1,11 +1,57 @@
 import { useState } from 'react';
-import { Search, Filter, Save, Send, MonitorSmartphone, Smartphone, MessageSquare, Bot, AlertTriangle, Construction } from 'lucide-react';
+import { Search, Filter, Save, Send, MonitorSmartphone, Smartphone, MessageSquare, Bot, AlertTriangle, CheckCircle2, Clock, ArrowRightLeft } from 'lucide-react';
 import styles from './AlertsCenter.module.css';
 
 const composeTabs = [
   { label: 'Compose Message', icon: MessageSquare },
   { label: 'Templates', icon: MonitorSmartphone },
   { label: 'Fallback Rules', icon: AlertTriangle },
+];
+
+interface MessageTemplate {
+  id: string;
+  name: string;
+  audience: string;
+  channels: Channel[];
+  message: string;
+}
+
+const messageTemplates: MessageTemplate[] = [
+  {
+    id: 'malaria-high',
+    name: 'Malaria Risk Spike',
+    audience: 'Community Workers',
+    channels: ['sms', 'dashboard'],
+    message: "ALERT: High malaria breeding risk detected in {district}. All Abajyanama b'ubuzima: conduct immediate stagnant water removal campaigns. Contact district office for support.",
+  },
+  {
+    id: 'flood-warning',
+    name: 'Flood Warning',
+    audience: 'All',
+    channels: ['sms', 'dashboard'],
+    message: 'FLOOD WARNING: Heavy rainfall forecast for {district} in next 48 hours. Evacuate low-lying areas. Avoid river crossing.',
+  },
+  {
+    id: 'monthly-briefing',
+    name: 'Monthly Health Briefing',
+    audience: 'District Officers',
+    channels: ['dashboard'],
+    message: 'Zero Bite Monthly Update for {district}: Risk level this month is {risk_level}. Key actions: {actions}.',
+  },
+  {
+    id: 'critical-escalation',
+    name: 'Critical Escalation',
+    audience: 'Ministry',
+    channels: ['sms', 'dashboard'],
+    message: 'CRITICAL: Imminent outbreak risk in {district}. Risk score {score}/100. Ministry of Health escalation required. All response channels activated.',
+  },
+];
+
+const fallbackRules = [
+  { id: 1, title: 'SMS delivery failure', description: 'If an SMS fails to send within 5 minutes, automatically retry once via the secondary gateway.', enabled: true },
+  { id: 2, title: 'Unseen dashboard alert', description: 'If a dashboard alert goes unacknowledged for 1 hour, escalate it as an SMS to the assigned team leader.', enabled: true },
+  { id: 3, title: 'Critical zone, no field response', description: 'If a CRITICAL zone has no field team assignment within 2 hours, notify the district officer directly.', enabled: true },
+  { id: 4, title: 'Offline CHW device', description: "If a Community Health Worker's device has been offline for 24h, queue alerts for delivery on next sync.", enabled: false },
 ];
 
 const statusFilters = ['All', 'Sent', 'Scheduled', 'Failed'] as const;
@@ -28,6 +74,22 @@ export default function AlertsCenter() {
   const [statusFilter, setStatusFilter] = useState<(typeof statusFilters)[number]>('All');
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState(1);
+  const [messageBody, setMessageBody] = useState(
+    'Attention: High rainfall predicted for Musanze over next 3 days. Community Health Workers are advised to increase mosquito net distribution and clear stagnant water sites.'
+  );
+  const [rules, setRules] = useState(fallbackRules);
+  const [templateLoaded, setTemplateLoaded] = useState<string | null>(null);
+
+  const loadTemplate = (template: (typeof messageTemplates)[number]) => {
+    setMessageBody(template.message);
+    setTemplateLoaded(template.name);
+    setActiveTab('Compose Message');
+    setTimeout(() => setTemplateLoaded(null), 2500);
+  };
+
+  const toggleRule = (id: number) => {
+    setRules((prev) => prev.map((r) => (r.id === id ? { ...r, enabled: !r.enabled } : r)));
+  };
 
   const visibleAlerts = alerts.filter((a) => {
     const matchesStatus = statusFilter === 'All' || a.status === statusFilter;
@@ -141,15 +203,83 @@ export default function AlertsCenter() {
               ))}
            </div>
 
-           {activeTab !== 'Compose Message' ? (
-             <div className="card" style={{ textAlign: 'center', padding: 'var(--spacing-2xl)' }}>
-               <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto var(--spacing-md)', color: 'var(--color-text-secondary)' }}>
-                 <Construction size={22} />
-               </div>
-               <h3 style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>{activeTab} is coming soon</h3>
-               <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>This panel isn't built yet. Switch back to Compose Message to draft an alert.</p>
+           {activeTab === 'Templates' && (
+             <div className="grid grid-cols-2 gap-lg">
+                {messageTemplates.map((template) => (
+                   <div key={template.id} className="card">
+                      <div className="flex justify-between items-start" style={{ marginBottom: '0.5rem' }}>
+                         <h3 style={{ fontSize: '1rem', margin: 0 }}>{template.name}</h3>
+                         <span className="badge" style={{ backgroundColor: '#F3F4F6', color: 'var(--color-text-secondary)' }}>{template.audience}</span>
+                      </div>
+                      <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', lineHeight: 1.5, marginBottom: 'var(--spacing-md)' }}>
+                         {template.message}
+                      </p>
+                      <div className="flex justify-between items-center">
+                         <div className="flex gap-sm" style={{ color: 'var(--color-text-tertiary)' }}>
+                            {template.channels.includes('sms') && <Smartphone size={14} />}
+                            {template.channels.includes('dashboard') && <MonitorSmartphone size={14} />}
+                         </div>
+                         <button className="btn-outline" onClick={() => loadTemplate(template)} style={{ fontSize: '0.8125rem', padding: '0.375rem 0.875rem' }}>
+                            Use Template
+                         </button>
+                      </div>
+                   </div>
+                ))}
              </div>
-           ) : (
+           )}
+
+           {activeTab === 'Fallback Rules' && (
+             <div className="flex-col gap-md">
+                <div className="flex items-start gap-sm" style={{ backgroundColor: '#F0F9FF', padding: 'var(--spacing-md)', borderRadius: 'var(--radius-md)', marginBottom: 'var(--spacing-sm)' }}>
+                   <ArrowRightLeft size={16} color="#0284C7" style={{ marginTop: '2px', flexShrink: 0 }} />
+                   <p style={{ fontSize: '0.8125rem', color: '#0369A1' }}>
+                      Fallback rules keep critical alerts from going unnoticed when the primary channel or recipient doesn't respond in time.
+                   </p>
+                </div>
+                {rules.map((rule) => (
+                   <div key={rule.id} className="card flex justify-between items-center" style={{ gap: 'var(--spacing-lg)' }}>
+                      <div className="flex gap-md">
+                         <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: 'var(--color-text-secondary)' }}>
+                            <Clock size={16} />
+                         </div>
+                         <div>
+                            <h4 style={{ fontSize: '0.9375rem', marginBottom: '0.25rem' }}>{rule.title}</h4>
+                            <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>{rule.description}</p>
+                         </div>
+                      </div>
+                      <button
+                         onClick={() => toggleRule(rule.id)}
+                         aria-label={rule.enabled ? 'Disable rule' : 'Enable rule'}
+                         style={{
+                            flexShrink: 0,
+                            width: '44px',
+                            height: '24px',
+                            borderRadius: 'var(--radius-pill)',
+                            backgroundColor: rule.enabled ? 'var(--color-risk-low)' : '#D1D5DB',
+                            position: 'relative',
+                            transition: 'background-color var(--transition-fast)',
+                         }}
+                      >
+                         <span
+                            style={{
+                               position: 'absolute',
+                               top: '3px',
+                               left: rule.enabled ? '23px' : '3px',
+                               width: '18px',
+                               height: '18px',
+                               borderRadius: '50%',
+                               backgroundColor: 'white',
+                               transition: 'left var(--transition-fast)',
+                               boxShadow: 'var(--shadow-sm)',
+                            }}
+                         />
+                      </button>
+                   </div>
+                ))}
+             </div>
+           )}
+
+           {activeTab === 'Compose Message' && (
            <div className="split-2-1">
               {/* Form Area */}
               <div className="flex-col gap-lg">
@@ -188,11 +318,21 @@ export default function AlertsCenter() {
                        <h3 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><MessageSquare size={16} /> Message Content</h3>
                        <button className="btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}><Bot size={14} /> AI Refine</button>
                     </div>
+                    {templateLoaded && (
+                       <div className="flex items-center gap-sm" style={{ marginBottom: 'var(--spacing-md)', padding: 'var(--spacing-sm) var(--spacing-md)', backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 'var(--radius-sm)', fontSize: '0.8125rem', color: '#166534' }}>
+                          <CheckCircle2 size={14} /> Loaded "{templateLoaded}" template
+                       </div>
+                    )}
                     <div className="grid grid-cols-2 gap-md">
                        <div>
                           <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--color-text-secondary)', marginBottom: '0.5rem' }}>ENGLISH (DEFAULT)</label>
-                          <textarea rows={6} style={{ width: '100%', padding: 'var(--spacing-sm)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', fontSize: '0.875rem', resize: 'vertical' }} defaultValue="Attention: High rainfall predicted for Musanze over next 3 days. Community Health Workers are advised to increase mosquito net distribution and clear stagnant water sites." />
-                          <div style={{ textAlign: 'right', fontSize: '0.75rem', color: 'var(--color-text-tertiary)', marginTop: '0.25rem' }}>156 / 160 characters</div>
+                          <textarea
+                             rows={6}
+                             style={{ width: '100%', padding: 'var(--spacing-sm)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', fontSize: '0.875rem', resize: 'vertical' }}
+                             value={messageBody}
+                             onChange={(e) => setMessageBody(e.target.value)}
+                          />
+                          <div style={{ textAlign: 'right', fontSize: '0.75rem', color: 'var(--color-text-tertiary)', marginTop: '0.25rem' }}>{messageBody.length} / 320 characters</div>
                        </div>
                        <div>
                           <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--color-text-secondary)', marginBottom: '0.5rem' }}>KINYARWANDA (TRANSLATED)</label>
@@ -219,7 +359,7 @@ export default function AlertsCenter() {
                     <div style={{ maxWidth: '260px', margin: '0 auto', backgroundColor: '#F3F4F6', borderRadius: 'var(--radius-md)', padding: 'var(--spacing-md)' }}>
                        <div style={{ textAlign: 'center', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-sm)' }}>Zero Bite</div>
                        <div style={{ backgroundColor: '#E5E7EB', padding: 'var(--spacing-sm) var(--spacing-md)', borderRadius: 'var(--radius-md)', fontSize: '0.875rem', lineHeight: 1.5, color: 'var(--color-text-primary)' }}>
-                          Attention: High rainfall predicted for Musanze over next 3 days...
+                          {messageBody.length > 90 ? `${messageBody.slice(0, 90)}...` : messageBody}
                        </div>
                     </div>
                  </div>
