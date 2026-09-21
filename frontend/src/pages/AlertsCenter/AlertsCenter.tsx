@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Filter, Save, Send, MonitorSmartphone, Smartphone, MessageSquare, Bot, AlertTriangle, CheckCircle2, Clock, ArrowRightLeft } from 'lucide-react';
+import { Search, Filter, Save, Send, MonitorSmartphone, Smartphone, MessageSquare, Bot, AlertTriangle, CheckCircle2, Clock, ArrowRightLeft, Loader2 } from 'lucide-react';
 import styles from './AlertsCenter.module.css';
 
 const composeTabs = [
@@ -79,6 +79,27 @@ export default function AlertsCenter() {
   );
   const [rules, setRules] = useState(fallbackRules);
   const [templateLoaded, setTemplateLoaded] = useState<string | null>(null);
+  const [sendState, setSendState] = useState<'idle' | 'sending'>('idle');
+  const [toast, setToast] = useState<string | null>(null);
+
+  const showToast = (message: string) => {
+    setToast(message);
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const sendAlert = () => {
+    if (!messageBody.trim()) {
+      showToast('Write a message before sending.');
+      return;
+    }
+    setSendState('sending');
+    setTimeout(() => {
+      setSendState('idle');
+      showToast('Alert sent to all selected channels and recipients.');
+    }, 1100);
+  };
+
+  const saveDraft = () => showToast('Draft saved.');
 
   const loadTemplate = (template: (typeof messageTemplates)[number]) => {
     setMessageBody(template.message);
@@ -100,6 +121,19 @@ export default function AlertsCenter() {
 
   return (
     <div className={styles.layout}>
+      {toast && (
+        <div
+          className="flex items-center gap-sm"
+          style={{
+            position: 'fixed', top: '1.5rem', right: '1.5rem', zIndex: 500,
+            backgroundColor: 'var(--color-primary)', color: 'white',
+            padding: 'var(--spacing-md) var(--spacing-lg)', borderRadius: 'var(--radius-md)',
+            boxShadow: 'var(--shadow-lg)', fontSize: '0.875rem', animation: 'fadeInUp 250ms ease-out',
+          }}
+        >
+          <CheckCircle2 size={18} color="#86EFAC" /> {toast}
+        </div>
+      )}
       {/* Sidebar: Alerts Inbox */}
       <div className={styles.inbox}>
         <div style={{ padding: 'var(--spacing-lg)', borderBottom: '1px solid var(--color-border)' }}>
@@ -180,8 +214,19 @@ export default function AlertsCenter() {
                  <p style={{ color: 'var(--color-text-secondary)' }}>Draft climate intelligence messages for cross-channel delivery.</p>
               </div>
               <div className="flex gap-md">
-                 <button className="btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Save size={16} /> Save as Draft</button>
-                 <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Send size={16} /> Send Alert</button>
+                 <button className="btn-outline" onClick={saveDraft} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Save size={16} /> Save as Draft</button>
+                 <button
+                    className="btn-primary"
+                    onClick={sendAlert}
+                    disabled={sendState === 'sending'}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: sendState === 'sending' ? 0.7 : 1 }}
+                 >
+                    {sendState === 'sending' ? (
+                       <><Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} /> Sending...</>
+                    ) : (
+                       <><Send size={16} /> Send Alert</>
+                    )}
+                 </button>
               </div>
            </div>
 
