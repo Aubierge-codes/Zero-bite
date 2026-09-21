@@ -10,7 +10,7 @@
 }
 
 .heroTitle {
-  font-size: 3.5rem;
+  font-size: 4rem;
   font-weight: 800;
   line-height: 1.1;
   margin-bottom: var(--spacing-md);
@@ -18,7 +18,7 @@
 }
 
 .heroSubtitle {
-  font-size: 1.25rem;
+  font-size: 1.375rem;
   color: var(--color-text-secondary);
   margin-bottom: var(--spacing-xl);
   line-height: 1.6;
@@ -40,7 +40,7 @@
   border: none;
   background: transparent;
   padding: var(--spacing-sm) var(--spacing-md);
-  font-size: 1rem;
+  font-size: 1.0625rem;
   outline: none;
 }
 
@@ -58,7 +58,7 @@
 
 .sectionTitle {
   text-align: center;
-  font-size: 2.25rem;
+  font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: var(--spacing-sm);
 }
@@ -67,9 +67,10 @@
   text-align: center;
   color: var(--color-text-secondary);
   margin-bottom: var(--spacing-2xl);
-  max-width: 600px;
+  max-width: 620px;
   margin-left: auto;
   margin-right: auto;
+  font-size: 1.125rem;
 }
 
 .grid3 {
@@ -81,6 +82,14 @@
 .featureCard {
   text-align: center;
   padding: var(--spacing-xl);
+}
+
+.featureCard h3 {
+  font-size: 1.375rem;
+}
+
+.featureCard p {
+  font-size: 1.0625rem;
 }
 
 .featureIcon {
@@ -252,11 +261,11 @@
   }
 
   .heroTitle {
-    font-size: 2.5rem;
+    font-size: 2.75rem;
   }
 
   .heroSubtitle {
-    font-size: 1.0625rem;
+    font-size: 1.1875rem;
   }
 
   .mapPlaceholder {
@@ -275,6 +284,14 @@
 @media (max-width: 768px) {
   .grid3 {
     grid-template-columns: 1fr;
+  }
+
+  .sectionTitle {
+    font-size: 2rem;
+  }
+
+  .sectionSubtitle {
+    font-size: 1rem;
   }
 }
 
