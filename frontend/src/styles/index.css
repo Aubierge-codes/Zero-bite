@@ -58,6 +58,28 @@
   to { transform: rotate(360deg); }
 }
 
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
 body {
   font-family: var(--font-family-sans);
   background-color: var(--color-background);
@@ -98,6 +120,13 @@ button {
   box-shadow: var(--shadow-sm);
   padding: var(--spacing-xl);
   border: 1px solid var(--color-border);
+  transition: box-shadow var(--transition-normal), transform var(--transition-normal), border-color var(--transition-normal);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  border-color: #D0D5DD;
 }
 
 .btn-primary {
@@ -106,11 +135,15 @@ button {
   padding: var(--spacing-sm) var(--spacing-lg);
   border-radius: var(--radius-md);
   font-weight: 500;
-  transition: background-color var(--transition-fast);
+  transition: background-color var(--transition-fast), transform 100ms ease-out;
 }
 
 .btn-primary:hover {
   background-color: var(--color-primary-hover);
+}
+
+.btn-primary:active {
+  transform: scale(0.97);
 }
 
 .btn-outline {
@@ -120,11 +153,15 @@ button {
   padding: var(--spacing-sm) var(--spacing-lg);
   border-radius: var(--radius-md);
   font-weight: 500;
-  transition: background-color var(--transition-fast);
+  transition: background-color var(--transition-fast), transform 100ms ease-out;
 }
 
 .btn-outline:hover {
   background-color: var(--color-background);
+}
+
+.btn-outline:active {
+  transform: scale(0.97);
 }
 
 .badge {
@@ -188,6 +225,25 @@ button {
 
 .hide-on-mobile { display: initial; }
 .show-on-mobile { display: none; }
+
+/* Scroll-reveal: paired with the <Reveal> component, which toggles
+   .is-visible via IntersectionObserver when the element enters the
+   viewport, rather than animating everything on initial page load. */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 600ms ease-out, transform 600ms ease-out;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Route-level fade, applied by the layouts on each navigation. */
+.page-fade-in {
+  animation: fadeIn 220ms ease-out;
+}
 
 @media (max-width: 1024px) {
   .grid-cols-4 { grid-template-columns: repeat(2, 1fr); }
