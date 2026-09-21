@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Outlet, Link } from 'react-router-dom';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import styles from './PublicLayout.module.css';
 
 export default function PublicLayout() {
   const [navOpen, setNavOpen] = useState(false);
+  const location = useLocation();
 
   return (
     <div className={styles.layout}>
@@ -30,7 +31,7 @@ export default function PublicLayout() {
           </div>
         </div>
       </header>
-      <main>
+      <main key={location.pathname} className="page-fade-in">
         <Outlet />
       </main>
       <footer className={styles.footer}>

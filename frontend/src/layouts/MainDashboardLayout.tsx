@@ -92,7 +92,7 @@ export default function MainDashboardLayout() {
         </header>
 
         {/* Page Content */}
-        <div className={styles.pageContent}>
+        <div key={location.pathname} className={`${styles.pageContent} page-fade-in`}>
           <Outlet />
         </div>
       </main>
