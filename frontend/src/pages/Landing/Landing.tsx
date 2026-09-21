@@ -5,6 +5,7 @@ import { Satellite, Brain, Smartphone, CheckCircle2, Bot, ArrowUp, Landmark, Bui
 import RwandaHeroMap from '../../components/RwandaHeroMap';
 import RoleCard from '../../components/RoleCard';
 import Reveal from '../../components/Reveal';
+import CountUp from '../../components/CountUp';
 
 const assistantChecklist = [
   'Ask about specific district forecasts',
@@ -21,9 +22,9 @@ const preventionTips = [
 ];
 
 const trustStats = [
-  { value: '94%', label: 'Prediction Accuracy' },
-  { value: '12m', label: 'Data Latency' },
-  { value: '30+', label: 'Districts Monitored' },
+  { value: 94, suffix: '%', label: 'Prediction Accuracy' },
+  { value: 12, suffix: 'm', label: 'Data Latency' },
+  { value: 30, suffix: '+', label: 'Districts Monitored' },
 ];
 
 const partners = [
@@ -350,7 +351,9 @@ export default function Landing() {
             <div className="grid grid-cols-3 gap-lg" style={{ marginBottom: 'var(--spacing-2xl)', textAlign: 'center' }}>
               {trustStats.map((stat) => (
                 <div key={stat.label}>
-                  <div style={{ fontSize: '3.25rem', fontWeight: 800 }}>{stat.value}</div>
+                  <div style={{ fontSize: '3.25rem', fontWeight: 800 }}>
+                    <CountUp value={stat.value} suffix={stat.suffix} />
+                  </div>
                   <div style={{ fontSize: '0.9375rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{stat.label}</div>
                 </div>
               ))}

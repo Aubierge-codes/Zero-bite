@@ -1,12 +1,13 @@
 import { useNavigate } from 'react-router-dom';
 import { Database, Users, Share2, Zap, Satellite, Brain, HeartPulse, MapPin } from 'lucide-react';
 import styles from './About.module.css';
+import CountUp from '../../components/CountUp';
 
 const byTheNumbers = [
-  { icon: <MapPin size={20} />, value: '30', label: 'Districts Monitored' },
-  { icon: <HeartPulse size={20} />, value: '1.2M', label: 'People Protected' },
-  { icon: <Satellite size={20} />, value: '15yrs', label: 'Historical Data' },
-  { icon: <Brain size={20} />, value: '94%', label: 'Prediction Accuracy' },
+  { icon: <MapPin size={20} />, value: 30, suffix: '', label: 'Districts Monitored' },
+  { icon: <HeartPulse size={20} />, value: 1.2, suffix: 'M', decimals: 1, label: 'People Protected' },
+  { icon: <Satellite size={20} />, value: 15, suffix: 'yrs', label: 'Historical Data' },
+  { icon: <Brain size={20} />, value: 94, suffix: '%', label: 'Prediction Accuracy' },
 ];
 
 const values = [
@@ -71,7 +72,9 @@ export default function About() {
                 {byTheNumbers.map((stat) => (
                   <div key={stat.label} className={styles.statBlock}>
                     <div style={{ color: 'var(--color-text-secondary)', marginBottom: '0.5rem', display: 'flex', justifyContent: 'center' }}>{stat.icon}</div>
-                    <div className={styles.statValue}>{stat.value}</div>
+                    <div className={styles.statValue}>
+                      <CountUp value={stat.value} suffix={stat.suffix} decimals={stat.decimals ?? 0} />
+                    </div>
                     <div className={styles.statLabel}>{stat.label}</div>
                   </div>
                 ))}
