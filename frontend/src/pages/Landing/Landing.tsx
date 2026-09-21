@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Satellite, Brain, Smartphone, CheckCircle2, Bot, ArrowUp, Landmark, Building2, Stethoscope, Globe, Shield, Droplets, Scissors, Clock, ArrowRight, Info, GraduationCap, RadioTower, Download } from 'lucide-react';
 import RwandaHeroMap from '../../components/RwandaHeroMap';
 import RoleCard from '../../components/RoleCard';
+import Reveal from '../../components/Reveal';
 
 const assistantChecklist = [
   'Ask about specific district forecasts',
@@ -108,32 +109,40 @@ export default function Landing() {
       {/* How it Works Section */}
       <section className={styles.section} style={{ backgroundColor: 'var(--color-surface)' }}>
         <div className="container">
-          <h2 className={styles.sectionTitle}>How Zero Bite Works</h2>
-          <p className={styles.sectionSubtitle}>
-            The end-to-end intelligence pipeline protecting Rwandan communities from climate-related health disasters.
-          </p>
+          <Reveal>
+            <h2 className={styles.sectionTitle}>How Zero Bite Works</h2>
+            <p className={styles.sectionSubtitle}>
+              The end-to-end intelligence pipeline protecting Rwandan communities from climate-related health disasters.
+            </p>
+          </Reveal>
           <div className={styles.grid3}>
-            <div className={styles.featureCard}>
-              <div className={styles.featureIcon}><Satellite size={32} /></div>
-              <h3>Data Ingestion</h3>
-              <p style={{ color: 'var(--color-text-secondary)', marginTop: '0.5rem' }}>
-                We pull real-time satellite imagery and Meteo Rwanda weather feeds.
-              </p>
-            </div>
-            <div className={styles.featureCard}>
-              <div className={styles.featureIcon}><Brain size={32} /></div>
-              <h3>AI Prediction</h3>
-              <p style={{ color: 'var(--color-text-secondary)', marginTop: '0.5rem' }}>
-                Our models process 12+ indicators to predict malaria breeding risk 30 days ahead.
-              </p>
-            </div>
-            <div className={styles.featureCard}>
-              <div className={styles.featureIcon}><Smartphone size={32} /></div>
-              <h3>Actionable Response</h3>
-              <p style={{ color: 'var(--color-text-secondary)', marginTop: '0.5rem' }}>
-                Localized alerts are sent to CHWs and Ministry officials for immediate intervention.
-              </p>
-            </div>
+            <Reveal delay={0}>
+              <div className={styles.featureCard}>
+                <div className={styles.featureIcon}><Satellite size={32} /></div>
+                <h3>Data Ingestion</h3>
+                <p style={{ color: 'var(--color-text-secondary)', marginTop: '0.5rem' }}>
+                  We pull real-time satellite imagery and Meteo Rwanda weather feeds.
+                </p>
+              </div>
+            </Reveal>
+            <Reveal delay={120}>
+              <div className={styles.featureCard}>
+                <div className={styles.featureIcon}><Brain size={32} /></div>
+                <h3>AI Prediction</h3>
+                <p style={{ color: 'var(--color-text-secondary)', marginTop: '0.5rem' }}>
+                  Our models process 12+ indicators to predict malaria breeding risk 30 days ahead.
+                </p>
+              </div>
+            </Reveal>
+            <Reveal delay={240}>
+              <div className={styles.featureCard}>
+                <div className={styles.featureIcon}><Smartphone size={32} /></div>
+                <h3>Actionable Response</h3>
+                <p style={{ color: 'var(--color-text-secondary)', marginTop: '0.5rem' }}>
+                  Localized alerts are sent to CHWs and Ministry officials for immediate intervention.
+                </p>
+              </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -142,43 +151,47 @@ export default function Landing() {
       <section className={styles.section}>
         <div className="container">
           <div className={styles.showcaseGrid}>
-            <div>
-              <div className="badge badge-low" style={{ marginBottom: '1rem', fontSize: '0.9375rem', padding: '0.375rem 0.875rem' }}>Virtual Assistant</div>
-              <h2 style={{ fontSize: '2.25rem', marginBottom: '1rem' }}>Your 24/7 Climate Intelligence Partner</h2>
-              <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.1875rem', lineHeight: 1.6 }}>
-                The Zero Bite AI Assistant understands the complex relationships between rainfall, temperature, and vector breeding. Get instant insights in your language.
-              </p>
-              <ul className={styles.checklist}>
-                {assistantChecklist.map((item) => (
-                  <li key={item}>
-                    <CheckCircle2 size={18} color="var(--color-risk-low)" style={{ flexShrink: 0 }} /> {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <Reveal>
+              <div>
+                <div className="badge badge-low" style={{ marginBottom: '1rem', fontSize: '0.9375rem', padding: '0.375rem 0.875rem' }}>Virtual Assistant</div>
+                <h2 style={{ fontSize: '2.25rem', marginBottom: '1rem' }}>Your 24/7 Climate Intelligence Partner</h2>
+                <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.1875rem', lineHeight: 1.6 }}>
+                  The Zero Bite AI Assistant understands the complex relationships between rainfall, temperature, and vector breeding. Get instant insights in your language.
+                </p>
+                <ul className={styles.checklist}>
+                  {assistantChecklist.map((item) => (
+                    <li key={item}>
+                      <CheckCircle2 size={18} color="var(--color-risk-low)" style={{ flexShrink: 0 }} /> {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Reveal>
 
-            <div className={styles.chatCard}>
-              <div className={styles.chatHeader}>
-                <span className={styles.chatAvatar}><Bot size={18} /></span>
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>Zero Bite AI Assistant</div>
-                  <div className={styles.chatStatus}>
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: 'var(--color-risk-low)' }} /> Active • Kinyarwanda
+            <Reveal delay={150}>
+              <div className={styles.chatCard}>
+                <div className={styles.chatHeader}>
+                  <span className={styles.chatAvatar}><Bot size={18} /></span>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>Zero Bite AI Assistant</div>
+                    <div className={styles.chatStatus}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: 'var(--color-risk-low)' }} /> Active • Kinyarwanda
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className={styles.chatBody}>
-                <div className={styles.chatBubbleUser}>Mwaramutse! How can you help with today's malaria risk assessment?</div>
-                <div className={styles.chatSuggestion}>Why is the risk high in Kayonza today?</div>
-                <div className={styles.chatBubbleAi}>
-                  Risk in <strong>Kayonza</strong> is currently at <strong>78/100</strong> (+15% today). This is driven by a 75% humidity spike combined with stagnant water detected via satellite imagery. Mosquitoes are highly active following recent rainfall in Nyanza village.
+                <div className={styles.chatBody}>
+                  <div className={styles.chatBubbleUser}>Mwaramutse! How can you help with today's malaria risk assessment?</div>
+                  <div className={styles.chatSuggestion}>Why is the risk high in Kayonza today?</div>
+                  <div className={styles.chatBubbleAi}>
+                    Risk in <strong>Kayonza</strong> is currently at <strong>78/100</strong> (+15% today). This is driven by a 75% humidity spike combined with stagnant water detected via satellite imagery. Mosquitoes are highly active following recent rainfall in Nyanza village.
+                  </div>
+                </div>
+                <div className={styles.chatInputRow}>
+                  <input type="text" placeholder="Ask about your district here..." disabled />
+                  <button aria-label="Send"><ArrowUp size={16} /></button>
                 </div>
               </div>
-              <div className={styles.chatInputRow}>
-                <input type="text" placeholder="Ask about your district here..." disabled />
-                <button aria-label="Send"><ArrowUp size={16} /></button>
-              </div>
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -186,18 +199,21 @@ export default function Landing() {
       {/* Who Zero Bite Is For */}
       <section className={styles.section} style={{ backgroundColor: 'var(--color-surface)' }}>
         <div className="container">
-          <h2 className={styles.sectionTitle}>Who Zero Bite Is For</h2>
-          <p className={styles.sectionSubtitle}>Tailored dashboards for every level of the health system.</p>
+          <Reveal>
+            <h2 className={styles.sectionTitle}>Who Zero Bite Is For</h2>
+            <p className={styles.sectionSubtitle}>Tailored dashboards for every level of the health system.</p>
+          </Reveal>
           <div className="grid grid-cols-4 gap-lg">
-            {roles.map((role) => (
-              <RoleCard
-                key={role.tag}
-                icon={role.icon}
-                tag={role.tag}
-                title={role.title}
-                description={role.description}
-                onAction={() => navigate(role.path)}
-              />
+            {roles.map((role, i) => (
+              <Reveal key={role.tag} delay={i * 90}>
+                <RoleCard
+                  icon={role.icon}
+                  tag={role.tag}
+                  title={role.title}
+                  description={role.description}
+                  onAction={() => navigate(role.path)}
+                />
+              </Reveal>
             ))}
           </div>
         </div>
@@ -207,6 +223,7 @@ export default function Landing() {
       <section className={styles.section} style={{ backgroundColor: 'var(--color-surface)' }}>
         <div className="container">
           <div className={styles.showcaseGrid} style={{ alignItems: 'start' }}>
+            <Reveal>
             <div>
               <h2 style={{ fontSize: '2rem', marginBottom: '0.25rem' }}>Prevention at a Glance</h2>
               <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-xl)', fontSize: '1.0625rem' }}>
@@ -227,7 +244,9 @@ export default function Landing() {
                 View full health guide <ArrowRight size={16} />
               </a>
             </div>
+            </Reveal>
 
+            <Reveal delay={150}>
             <div style={{ backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: 'var(--radius-xl)', padding: 'var(--spacing-xl)' }}>
               <h3 style={{ fontSize: '1.375rem', marginBottom: '0.5rem' }}>Subscribe to Local Alerts</h3>
               <p style={{ fontSize: '0.9375rem', color: '#D1D5DB', marginBottom: 'var(--spacing-lg)', lineHeight: 1.6 }}>
@@ -248,6 +267,7 @@ export default function Landing() {
                 <span>Zero Bite is a free service provided in partnership with the Ministry of Health. Standard SMS rates may apply. You can unsubscribe by texting STOP.</span>
               </div>
             </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -255,19 +275,23 @@ export default function Landing() {
       {/* Trust Through Science */}
       <section className={styles.section}>
         <div className="container">
-          <h2 className={styles.sectionTitle}>Trust Through Science</h2>
-          <p className={styles.sectionSubtitle}>
-            Our models are trained on 15 years of historical Rwandan epidemiological data and validated against high-resolution satellite imagery from the European Space Agency.
-          </p>
+          <Reveal>
+            <h2 className={styles.sectionTitle}>Trust Through Science</h2>
+            <p className={styles.sectionSubtitle}>
+              Our models are trained on 15 years of historical Rwandan epidemiological data and validated against high-resolution satellite imagery from the European Space Agency.
+            </p>
+          </Reveal>
 
-          <div className="grid grid-cols-3 gap-lg" style={{ marginBottom: 'var(--spacing-2xl)', textAlign: 'center' }}>
-            {trustStats.map((stat) => (
-              <div key={stat.label}>
-                <div style={{ fontSize: '3.25rem', fontWeight: 800 }}>{stat.value}</div>
-                <div style={{ fontSize: '0.9375rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{stat.label}</div>
-              </div>
-            ))}
-          </div>
+          <Reveal>
+            <div className="grid grid-cols-3 gap-lg" style={{ marginBottom: 'var(--spacing-2xl)', textAlign: 'center' }}>
+              {trustStats.map((stat) => (
+                <div key={stat.label}>
+                  <div style={{ fontSize: '3.25rem', fontWeight: 800 }}>{stat.value}</div>
+                  <div style={{ fontSize: '0.9375rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </Reveal>
 
           <p style={{ textAlign: 'center', fontSize: '0.8125rem', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 'var(--spacing-lg)' }}>
             Our Research &amp; Delivery Partners
@@ -280,6 +304,7 @@ export default function Landing() {
             ))}
           </div>
 
+          <Reveal>
           <div className="card flex justify-between items-center" style={{ backgroundColor: 'var(--color-primary)', color: 'white', border: 'none', flexWrap: 'wrap', gap: 'var(--spacing-lg)' }}>
             <div>
               <h3 style={{ fontSize: '1.25rem', marginBottom: '0.25rem' }}>2023 National Climate-Health Report</h3>
@@ -289,20 +314,23 @@ export default function Landing() {
               <Download size={16} /> Download PDF (14.2 MB)
             </button>
           </div>
+          </Reveal>
         </div>
       </section>
 
       {/* CTA Section */}
       <section className={styles.ctaSection}>
         <div className="container">
-          <h2 style={{ fontSize: '2rem' }}>Ready to secure your community?</h2>
-          <p style={{ color: 'var(--color-text-secondary)', marginTop: '0.5rem', marginBottom: '1.5rem', fontSize: '1.0625rem' }}>
-            Contact our team for specialized training, API access, or to join the District Health Intelligence Network.
-          </p>
-          <div className="flex justify-center gap-md">
-             <button className="btn-primary">Contact Our Team</button>
-             <button className="btn-outline" onClick={() => navigate('/public')}>View Public Portal</button>
-          </div>
+          <Reveal>
+            <h2 style={{ fontSize: '2rem' }}>Ready to secure your community?</h2>
+            <p style={{ color: 'var(--color-text-secondary)', marginTop: '0.5rem', marginBottom: '1.5rem', fontSize: '1.0625rem' }}>
+              Contact our team for specialized training, API access, or to join the District Health Intelligence Network.
+            </p>
+            <div className="flex justify-center gap-md">
+               <button className="btn-primary">Contact Our Team</button>
+               <button className="btn-outline" onClick={() => navigate('/public')}>View Public Portal</button>
+            </div>
+          </Reveal>
         </div>
       </section>
     </div>
