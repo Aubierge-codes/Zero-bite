@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import styles from './Landing.module.css';
 import { useNavigate } from 'react-router-dom';
-import { Satellite, Brain, Smartphone, CheckCircle2, Bot, ArrowUp, Landmark, Building2, Stethoscope, Globe, Shield, Droplets, Scissors, Clock, ArrowRight, Info, GraduationCap, RadioTower, Download } from 'lucide-react';
+import { Satellite, Brain, Smartphone, CheckCircle2, Bot, ArrowUp, Landmark, Building2, Stethoscope, Globe, Shield, Droplets, Scissors, Clock, ArrowRight, Info, GraduationCap, RadioTower, Download, Loader2 } from 'lucide-react';
 import RwandaHeroMap from '../../components/RwandaHeroMap';
 import RoleCard from '../../components/RoleCard';
 import Reveal from '../../components/Reveal';
@@ -71,6 +71,25 @@ export default function Landing() {
   const checkRisk = () => {
     const params = heroQuery.trim() ? `?district=${encodeURIComponent(heroQuery.trim())}` : '';
     navigate(`/public${params}`);
+  };
+
+  const [subscribeForm, setSubscribeForm] = useState({ name: '', phone: '', district: '' });
+  const [subscribeError, setSubscribeError] = useState('');
+  const [subscribeStatus, setSubscribeStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
+
+  const handleSubscribe = (e: FormEvent) => {
+    e.preventDefault();
+    if (!/^\+?[\d\s]{9,15}$/.test(subscribeForm.phone.trim())) {
+      setSubscribeError('Enter a valid phone number.');
+      return;
+    }
+    if (!subscribeForm.district) {
+      setSubscribeError('Select your district.');
+      return;
+    }
+    setSubscribeError('');
+    setSubscribeStatus('submitting');
+    setTimeout(() => setSubscribeStatus('success'), 1000);
   };
 
   return (
@@ -248,24 +267,69 @@ export default function Landing() {
 
             <Reveal delay={150}>
             <div style={{ backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: 'var(--radius-xl)', padding: 'var(--spacing-xl)' }}>
+              {subscribeStatus === 'success' ? (
+                <div style={{ textAlign: 'center', padding: 'var(--spacing-lg) 0', animation: 'scaleIn 300ms ease-out' }}>
+                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'rgba(76, 175, 80, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto var(--spacing-md)', color: '#86EFAC' }}>
+                    <CheckCircle2 size={24} />
+                  </div>
+                  <h3 style={{ fontSize: '1.125rem', marginBottom: '0.5rem' }}>You're subscribed!</h3>
+                  <p style={{ fontSize: '0.875rem', color: '#D1D5DB' }}>
+                    Weekly risk alerts for {subscribeForm.district} will be sent to {subscribeForm.phone}.
+                  </p>
+                </div>
+              ) : (
+              <>
               <h3 style={{ fontSize: '1.375rem', marginBottom: '0.5rem' }}>Subscribe to Local Alerts</h3>
               <p style={{ fontSize: '0.9375rem', color: '#D1D5DB', marginBottom: 'var(--spacing-lg)', lineHeight: 1.6 }}>
                 Receive real-time SMS alerts in English or Kinyarwanda when risk levels increase in your district.
               </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-md)' }}>
-                <input type="text" placeholder="Full Name" style={{ padding: 'var(--spacing-md)', borderRadius: 'var(--radius-sm)', border: 'none', fontSize: '0.875rem' }} />
-                <input type="tel" placeholder="+250 XXX XXX XXX" style={{ padding: 'var(--spacing-md)', borderRadius: 'var(--radius-sm)', border: 'none', fontSize: '0.875rem' }} />
-                <select style={{ padding: 'var(--spacing-md)', borderRadius: 'var(--radius-sm)', border: 'none', fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
-                  <option>Select District</option>
-                </select>
-              </div>
-              <button style={{ width: '100%', padding: 'var(--spacing-md)', borderRadius: 'var(--radius-sm)', backgroundColor: 'white', color: 'var(--color-primary)', fontWeight: 600 }}>
-                Subscribe Now
-              </button>
+              <form onSubmit={handleSubscribe}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-sm)' }}>
+                  <input
+                    type="text"
+                    placeholder="Full Name"
+                    value={subscribeForm.name}
+                    onChange={(e) => setSubscribeForm((prev) => ({ ...prev, name: e.target.value }))}
+                    style={{ padding: 'var(--spacing-md)', borderRadius: 'var(--radius-sm)', border: 'none', fontSize: '0.875rem' }}
+                  />
+                  <input
+                    type="tel"
+                    placeholder="+250 XXX XXX XXX"
+                    value={subscribeForm.phone}
+                    onChange={(e) => setSubscribeForm((prev) => ({ ...prev, phone: e.target.value }))}
+                    style={{ padding: 'var(--spacing-md)', borderRadius: 'var(--radius-sm)', border: 'none', fontSize: '0.875rem' }}
+                  />
+                  <select
+                    value={subscribeForm.district}
+                    onChange={(e) => setSubscribeForm((prev) => ({ ...prev, district: e.target.value }))}
+                    style={{ padding: 'var(--spacing-md)', borderRadius: 'var(--radius-sm)', border: 'none', fontSize: '0.875rem', color: subscribeForm.district ? 'var(--color-text-primary)' : 'var(--color-text-secondary)' }}
+                  >
+                    <option value="">Select District</option>
+                    <option>Gasabo</option>
+                    <option>Kayonza</option>
+                    <option>Musanze</option>
+                    <option>Bugesera</option>
+                    <option>Rubavu</option>
+                    <option>Huye</option>
+                  </select>
+                </div>
+                {subscribeError && <p style={{ color: '#FCA5A5', fontSize: '0.8125rem', marginBottom: 'var(--spacing-sm)' }}>{subscribeError}</p>}
+                <button
+                  type="submit"
+                  disabled={subscribeStatus === 'submitting'}
+                  style={{ width: '100%', padding: 'var(--spacing-md)', borderRadius: 'var(--radius-sm)', backgroundColor: 'white', color: 'var(--color-primary)', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', opacity: subscribeStatus === 'submitting' ? 0.7 : 1 }}
+                >
+                  {subscribeStatus === 'submitting' ? (
+                    <><Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} /> Subscribing...</>
+                  ) : 'Subscribe Now'}
+                </button>
+              </form>
               <div className="flex gap-sm" style={{ marginTop: 'var(--spacing-md)', fontSize: '0.75rem', color: '#9CA3AF', alignItems: 'flex-start' }}>
                 <Info size={14} style={{ marginTop: '2px', flexShrink: 0 }} />
                 <span>Zero Bite is a free service provided in partnership with the Ministry of Health. Standard SMS rates may apply. You can unsubscribe by texting STOP.</span>
               </div>
+              </>
+              )}
             </div>
             </Reveal>
           </div>
