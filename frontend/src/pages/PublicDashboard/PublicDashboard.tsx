@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, MapPin, AlertTriangle, Shield, Droplets, Home, Hospital, Calendar, Thermometer, Info, Circle } from 'lucide-react';
+import { Search, MapPin, AlertTriangle, Shield, Droplets, Home, Hospital, Calendar, Thermometer, Info, Circle, CheckCircle2, Loader2 } from 'lucide-react';
 import FloatingChatBubble from '../../components/FloatingChatBubble';
 
 interface DistrictSnapshot {
@@ -74,6 +74,21 @@ export default function PublicDashboard() {
     const fromLanding = searchParams.get('district');
     if (fromLanding) lookup(fromLanding);
   }, []);
+
+  const [subPhone, setSubPhone] = useState('');
+  const [subError, setSubError] = useState('');
+  const [subStatus, setSubStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
+
+  const handleSubscribe = (e: FormEvent) => {
+    e.preventDefault();
+    if (!/^\+?[\d\s]{9,15}$/.test(subPhone.trim())) {
+      setSubError('Enter a valid phone number.');
+      return;
+    }
+    setSubError('');
+    setSubStatus('submitting');
+    setTimeout(() => setSubStatus('success'), 1000);
+  };
 
   return (
     <div className="container" style={{ padding: 'var(--spacing-2xl) 0' }}>
@@ -235,10 +250,39 @@ export default function PublicDashboard() {
            </div>
            
            <div className="card" style={{ backgroundColor: 'var(--color-primary)', color: 'white' }}>
+              {subStatus === 'success' ? (
+                <div style={{ textAlign: 'center', padding: 'var(--spacing-sm) 0', animation: 'scaleIn 300ms ease-out' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'rgba(76, 175, 80, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto var(--spacing-sm)', color: '#86EFAC' }}>
+                    <CheckCircle2 size={20} />
+                  </div>
+                  <h3 style={{ margin: 0, fontSize: '1.0625rem', marginBottom: '0.25rem' }}>You're protected</h3>
+                  <p style={{ fontSize: '0.8125rem', color: '#D1D5DB' }}>Weekly {district.label} alerts will be sent to {subPhone}.</p>
+                </div>
+              ) : (
+              <>
               <h3 style={{ margin: 0, fontSize: '1.25rem', marginBottom: '0.5rem' }}>Stay Protected</h3>
               <p style={{ fontSize: '0.875rem', color: '#D1D5DB', marginBottom: 'var(--spacing-md)' }}>Get weekly malaria risk alerts for your village via SMS. No smartphone required.</p>
-              <input type="text" placeholder="Enter phone number (e.g., 078...)" style={{ width: '100%', padding: 'var(--spacing-md)', borderRadius: 'var(--radius-sm)', border: 'none', marginBottom: 'var(--spacing-sm)' }} />
-              <button style={{ width: '100%', padding: 'var(--spacing-md)', borderRadius: 'var(--radius-sm)', backgroundColor: 'white', color: 'var(--color-primary)', fontWeight: 600, border: 'none' }}>Subscribe Free</button>
+              <form onSubmit={handleSubscribe}>
+                <input
+                  type="text"
+                  placeholder="Enter phone number (e.g., 078...)"
+                  value={subPhone}
+                  onChange={(e) => setSubPhone(e.target.value)}
+                  style={{ width: '100%', padding: 'var(--spacing-md)', borderRadius: 'var(--radius-sm)', border: 'none', marginBottom: 'var(--spacing-sm)' }}
+                />
+                {subError && <p style={{ color: '#FCA5A5', fontSize: '0.8125rem', marginBottom: 'var(--spacing-sm)' }}>{subError}</p>}
+                <button
+                  type="submit"
+                  disabled={subStatus === 'submitting'}
+                  style={{ width: '100%', padding: 'var(--spacing-md)', borderRadius: 'var(--radius-sm)', backgroundColor: 'white', color: 'var(--color-primary)', fontWeight: 600, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', opacity: subStatus === 'submitting' ? 0.7 : 1 }}
+                >
+                  {subStatus === 'submitting' ? (
+                    <><Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} /> Subscribing...</>
+                  ) : 'Subscribe Free'}
+                </button>
+              </form>
+              </>
+              )}
            </div>
         </div>
       </div>
