@@ -78,7 +78,7 @@ export default function Landing() {
       <section className={styles.hero}>
         <div className="container" style={{ position: 'relative' }}>
           <div className={styles.heroContent}>
-            <div className="badge badge-low" style={{ marginBottom: '1rem', padding: '0.25rem 0.75rem', fontSize: '0.875rem' }}>
+            <div className="badge badge-low" style={{ marginBottom: '1rem', padding: '0.375rem 0.875rem', fontSize: '0.9375rem' }}>
               Powered by AI & Satellite Data
             </div>
             <h1 className={styles.heroTitle}>Climate Intelligence for a Malaria-Free Rwanda.</h1>
@@ -95,7 +95,7 @@ export default function Landing() {
               />
               <button onClick={checkRisk}>Check Risk</button>
             </div>
-            <p style={{ fontSize: '0.875rem', color: 'var(--color-text-tertiary)' }}>
+            <p style={{ fontSize: '0.9375rem', color: 'var(--color-text-tertiary)' }}>
               Trusted by <strong>30+ District Health Officers</strong> across Rwanda.
             </p>
           </div>
@@ -143,9 +143,9 @@ export default function Landing() {
         <div className="container">
           <div className={styles.showcaseGrid}>
             <div>
-              <div className="badge badge-low" style={{ marginBottom: '1rem' }}>Virtual Assistant</div>
-              <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Your 24/7 Climate Intelligence Partner</h2>
-              <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.125rem', lineHeight: 1.6 }}>
+              <div className="badge badge-low" style={{ marginBottom: '1rem', fontSize: '0.9375rem', padding: '0.375rem 0.875rem' }}>Virtual Assistant</div>
+              <h2 style={{ fontSize: '2.25rem', marginBottom: '1rem' }}>Your 24/7 Climate Intelligence Partner</h2>
+              <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.1875rem', lineHeight: 1.6 }}>
                 The Zero Bite AI Assistant understands the complex relationships between rainfall, temperature, and vector breeding. Get instant insights in your language.
               </p>
               <ul className={styles.checklist}>
@@ -208,8 +208,8 @@ export default function Landing() {
         <div className="container">
           <div className={styles.showcaseGrid} style={{ alignItems: 'start' }}>
             <div>
-              <h2 style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>Prevention at a Glance</h2>
-              <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-xl)' }}>
+              <h2 style={{ fontSize: '2rem', marginBottom: '0.25rem' }}>Prevention at a Glance</h2>
+              <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-xl)', fontSize: '1.0625rem' }}>
                 Immediate steps to take based on current national climate trends.
               </p>
               <div className="grid grid-cols-2 gap-lg">
@@ -217,20 +217,20 @@ export default function Landing() {
                   <div key={tip.title} className="flex gap-md">
                     <div style={{ color: 'var(--color-text-secondary)', flexShrink: 0 }}>{tip.icon}</div>
                     <div>
-                      <h4 style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>{tip.title}</h4>
-                      <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>{tip.description}</p>
+                      <h4 style={{ fontSize: '1.125rem', marginBottom: '0.25rem' }}>{tip.title}</h4>
+                      <p style={{ fontSize: '0.9375rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>{tip.description}</p>
                     </div>
                   </div>
                 ))}
               </div>
-              <a href="#" className="flex items-center gap-sm" style={{ marginTop: 'var(--spacing-xl)', fontSize: '0.875rem', fontWeight: 600 }}>
+              <a href="#" className="flex items-center gap-sm" style={{ marginTop: 'var(--spacing-xl)', fontSize: '0.9375rem', fontWeight: 600 }}>
                 View full health guide <ArrowRight size={16} />
               </a>
             </div>
 
             <div style={{ backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: 'var(--radius-xl)', padding: 'var(--spacing-xl)' }}>
-              <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Subscribe to Local Alerts</h3>
-              <p style={{ fontSize: '0.875rem', color: '#D1D5DB', marginBottom: 'var(--spacing-lg)', lineHeight: 1.6 }}>
+              <h3 style={{ fontSize: '1.375rem', marginBottom: '0.5rem' }}>Subscribe to Local Alerts</h3>
+              <p style={{ fontSize: '0.9375rem', color: '#D1D5DB', marginBottom: 'var(--spacing-lg)', lineHeight: 1.6 }}>
                 Receive real-time SMS alerts in English or Kinyarwanda when risk levels increase in your district.
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-md)' }}>
@@ -263,13 +263,13 @@ export default function Landing() {
           <div className="grid grid-cols-3 gap-lg" style={{ marginBottom: 'var(--spacing-2xl)', textAlign: 'center' }}>
             {trustStats.map((stat) => (
               <div key={stat.label}>
-                <div style={{ fontSize: '3rem', fontWeight: 800 }}>{stat.value}</div>
-                <div style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{stat.label}</div>
+                <div style={{ fontSize: '3.25rem', fontWeight: 800 }}>{stat.value}</div>
+                <div style={{ fontSize: '0.9375rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{stat.label}</div>
               </div>
             ))}
           </div>
 
-          <p style={{ textAlign: 'center', fontSize: '0.75rem', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 'var(--spacing-lg)' }}>
+          <p style={{ textAlign: 'center', fontSize: '0.8125rem', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 'var(--spacing-lg)' }}>
             Our Research &amp; Delivery Partners
           </p>
           <div className="flex justify-center gap-xl" style={{ flexWrap: 'wrap', marginBottom: 'var(--spacing-2xl)' }}>
@@ -282,8 +282,8 @@ export default function Landing() {
 
           <div className="card flex justify-between items-center" style={{ backgroundColor: 'var(--color-primary)', color: 'white', border: 'none', flexWrap: 'wrap', gap: 'var(--spacing-lg)' }}>
             <div>
-              <h3 style={{ fontSize: '1.125rem', marginBottom: '0.25rem' }}>2023 National Climate-Health Report</h3>
-              <p style={{ fontSize: '0.875rem', color: '#D1D5DB' }}>Download the comprehensive analysis on how AI is transforming outbreak prevention in Rwanda.</p>
+              <h3 style={{ fontSize: '1.25rem', marginBottom: '0.25rem' }}>2023 National Climate-Health Report</h3>
+              <p style={{ fontSize: '0.9375rem', color: '#D1D5DB' }}>Download the comprehensive analysis on how AI is transforming outbreak prevention in Rwanda.</p>
             </div>
             <button style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: 'var(--spacing-sm) var(--spacing-lg)', borderRadius: 'var(--radius-md)', backgroundColor: 'white', color: 'var(--color-primary)', fontWeight: 600, flexShrink: 0 }}>
               <Download size={16} /> Download PDF (14.2 MB)
@@ -295,8 +295,8 @@ export default function Landing() {
       {/* CTA Section */}
       <section className={styles.ctaSection}>
         <div className="container">
-          <h2>Ready to secure your community?</h2>
-          <p style={{ color: 'var(--color-text-secondary)', marginTop: '0.5rem', marginBottom: '1.5rem' }}>
+          <h2 style={{ fontSize: '2rem' }}>Ready to secure your community?</h2>
+          <p style={{ color: 'var(--color-text-secondary)', marginTop: '0.5rem', marginBottom: '1.5rem', fontSize: '1.0625rem' }}>
             Contact our team for specialized training, API access, or to join the District Health Intelligence Network.
           </p>
           <div className="flex justify-center gap-md">
