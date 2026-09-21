@@ -37,15 +37,22 @@ export default function About() {
 
   return (
     <div>
-      <section className={styles.hero}>
-        <div className="container">
-          <h1 className={styles.heroTitle}>About Zero Bite</h1>
-          <p className={styles.heroSubtitle}>
-            Zero Bite is Rwanda's climate-health intelligence platform, built to turn satellite and weather data into
-            early warnings that stop malaria outbreaks before they start.
-          </p>
-        </div>
-      </section>
+    <section className={styles.hero}>
+  <div className={`container ${styles.heroGrid}`}>
+    <div className={styles.heroText}>
+      <p className={styles.eyebrow}>About Zero Bite</p>
+      <h1 className={styles.heroTitle}>About Zero Bite</h1>
+      <p className={styles.heroSubtitle}>
+        Zero Bite is Rwanda's climate-health intelligence platform, built to turn satellite and weather data into
+        early warnings that stop malaria outbreaks before they start.
+      </p>
+    </div>
+
+    <div className={styles.heroVisual}>
+      <img src="/satelite.png" alt="Satellite monitoring climate data" className={styles.satelliteImage} />
+    </div>
+  </div>
+</section>
 
       <section className={styles.section}>
         <div className="container">

@@ -26,7 +26,7 @@
 }
 
 .heroTitle {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: Didot, serif;
   font-size: 3.875rem;
   line-height: 1.04;
   font-weight: 800;
@@ -459,8 +459,204 @@
   }
 }
 
-@media (max-width: 768px) {
-  .grid3 {
+.subscribeSplit {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: start;
+}
+
+.preventionCard {
+  background-color: #F5F5F5;
+  border: 1px solid #E5E5E5;
+  border-radius: 16px;
+  padding: 3rem;
+}
+
+.preventionTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.75rem;
+}
+
+.preventionSubtitle {
+  font-size: 1.05rem;
+  color: #6B7280;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.preventionGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2.5rem;
+}
+
+.preventionItem {
+  display: flex;
+  gap: 0.875rem;
+  align-items: flex-start;
+}
+
+.preventionIcon {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 50%;
+  background-color: #E5E7EB;
+  color: #6B7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.preventionItemTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.375rem;
+}
+
+.preventionItemDesc {
+  font-size: 0.9rem;
+  color: #6B7280;
+  line-height: 1.55;
+}
+
+.preventionLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+  text-decoration: none;
+}
+
+.subscribeTitle {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.02em;
+  margin-bottom: 1rem;
+}
+
+.subscribeSubtitle {
+  font-size: 1.125rem;
+  color: #6B7280;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  max-width: 540px;
+}
+
+.subscribeForm {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.subscribeInput,
+.subscribeSelect {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  font-size: 1rem;
+  color: #111827;
+  background: #FFFFFF;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+}
+
+.subscribeInput::placeholder,
+.subscribeSelect::placeholder {
+  color: #9CA3AF;
+}
+
+.subscribeInput:focus,
+.subscribeSelect:focus {
+  border-color: #111827;
+}
+
+.subscribeButton {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background-color: #111111;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.15s ease;
+}
+
+.subscribeButton:hover {
+  background-color: #333333;
+}
+
+.subscribeNote {
+  display: flex;
+  gap: 0.875rem;
+  align-items: flex-start;
+  padding: 1rem 1.25rem;
+  background-color: #FAFAFA;
+  border-radius: 16px;
+  max-width: 540px;
+}
+
+.subscribeNoteIcon {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 50%;
+  border: 1.5px solid #D1D5DB;
+  color: #6B7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+.subscribeNoteText {
+  font-size: 0.875rem;
+  color: #6B7280;
+  line-height: 1.55;
+}
+
+@media (max-width: 900px) {
+  .subscribeSplit {
     grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .preventionCard {
+    padding: 2rem;
+  }
+
+  .subscribeTitle {
+    font-size: 2rem;
+  }
+
+  .subscribeForm {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .preventionGrid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .preventionCard {
+    padding: 1.5rem;
   }
 }

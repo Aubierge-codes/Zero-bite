@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, Link } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Activity } from 'lucide-react';
 import styles from './PublicLayout.module.css';
 
 export default function PublicLayout() {
@@ -34,50 +34,51 @@ export default function PublicLayout() {
         <Outlet />
       </main>
       <footer className={styles.footer}>
-        <div className="container flex justify-between" style={{ alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--spacing-2xl)', paddingBottom: 'var(--spacing-xl)' }}>
+        <div className="container">
+          <div className={styles.footerGrid}>
            <div className={styles.footerBrand}>
-             <div className="flex items-center gap-sm">
-                <div className={styles.logo}></div>
-                <span className={styles.logoText}>Zero Bite</span>
+             <div className={styles.footerLogoRow}>
+                <div className={styles.footerLogo}>
+                  <Activity size={26} strokeWidth={2.5} />
+                </div>
+                <span className={styles.footerLogoText}>Zero Bite</span>
              </div>
              <p>Protecting communities through satellite-driven AI predictions and real-time climate intelligence.</p>
            </div>
-           <div className={styles.footerColumns}>
-             <div className={styles.footerColumn}>
-                <h4>Resources</h4>
-                <ul>
-                  <li><a href="#">Data Methodology</a></li>
-                  <li><a href="#">Meteo Rwanda Portal</a></li>
-                  <li><a href="#">MoH Health Guide</a></li>
-                </ul>
-             </div>
-             <div className={styles.footerColumn}>
-                <h4>Support</h4>
-                <ul>
-                  <li><Link to="/help">Help Center</Link></li>
-                  <li><Link to="/contact">Contact Us</Link></li>
-                  <li><Link to="/login">Admin Login</Link></li>
-                </ul>
-             </div>
-             <div className={styles.footerColumn}>
-                <h4>Platform</h4>
-                <ul>
-                  <li><Link to="/public">Public Dashboard</Link></li>
-                  <li><a href="#">SMS Subscription</a></li>
-                  <li><a href="#">API Access</a></li>
-                </ul>
-             </div>
+           <div className={styles.footerColumn}>
+              <h4>Resources</h4>
+              <ul>
+                <li><a href="#">Data Methodology</a></li>
+                <li><a href="#">Meteo Rwanda Portal</a></li>
+                <li><a href="#">MoH Health Guide</a></li>
+              </ul>
+           </div>
+           <div className={styles.footerColumn}>
+              <h4>Support</h4>
+              <ul>
+                <li><Link to="/help">Help Center</Link></li>
+                <li><Link to="/contact">Contact Us</Link></li>
+                <li><Link to="/login">Admin Login</Link></li>
+              </ul>
+           </div>
+           <div className={styles.footerColumn}>
+              <h4>Platform</h4>
+              <ul>
+                <li><Link to="/public">Public Dashboard</Link></li>
+                <li><a href="#">SMS Subscription</a></li>
+                <li><a href="#">API Access</a></li>
+              </ul>
            </div>
         </div>
+        <hr className={styles.footerDivider} />
         <div className={styles.copyright}>
-          <div className="container flex justify-between items-center">
-            <span>© 2024 Zero Bite Rwanda. Powered by AI and Satellite Data.</span>
-            <div className="flex gap-md">
-              <Link to="/privacy">Privacy Policy</Link>
-              <Link to="/terms">Terms of Service</Link>
-              <span>English (UK)</span>
-            </div>
+          <span className={styles.copyrightLeft}>© 2024 Zero Bite Rwanda. Powered by AI and Satellite Data.</span>
+          <div className={styles.copyrightRight}>
+            <Link to="/privacy">Privacy Policy</Link>
+            <Link to="/terms">Terms of Service</Link>
+            <span>English (UK)</span>
           </div>
+        </div>
         </div>
       </footer>
     </div>

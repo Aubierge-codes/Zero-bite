@@ -17,10 +17,10 @@ const assistantChecklist = [
 ];
 
 const preventionTips = [
-  { icon: <Shield size={20} />, title: 'Mosquito Nets', description: 'Ensure all household members sleep under insecticide-treated nets.' },
-  { icon: <Droplets size={20} />, title: 'Clear Water', description: 'Empty out or cover all standing water near your dwelling.' },
-  { icon: <Scissors size={20} />, title: 'Bush Clearing', description: 'Keep grass short and clear dense vegetation around dwellings.' },
-  { icon: <Clock size={20} />, title: 'Peak Exposure', description: 'Avoid being outdoors during peak biting times (dusk till dawn).' },
+  { icon: <Shield size={16} />, title: 'Mosquito Nets', description: 'Ensure all household members sleep under insecticide-treated nets.' },
+  { icon: <Droplets size={16} />, title: 'Clear Water', description: 'Empty or cover all containers of standing water near homes.' },
+  { icon: <Scissors size={16} />, title: 'Bush Clearing', description: 'Keep grass short and clear dense vegetation around dwellings.' },
+  { icon: <Clock size={16} />, title: 'Peak Exposure', description: 'Avoid being outdoors during dusk and dawn peak biting hours.' },
 ];
 
 const trustStats = [
@@ -156,7 +156,7 @@ export default function Landing() {
         <div className="container">
           <div className={styles.showcaseGrid}>
             <div>
-              <div className="badge badge-low" style={{ marginBottom: '1rem' }}>Virtual Assistant</div>
+              
               <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Your 24/7 Climate Intelligence Partner</h2>
               <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.125rem', lineHeight: 1.6 }}>
                 The Zero Bite AI Assistant understands the complex relationships between rainfall, temperature, and vector breeding. Get instant insights in your language.
@@ -217,48 +217,62 @@ export default function Landing() {
       </section>
 
       {/* Prevention at a Glance + Subscribe */}
-      <section className={styles.section} style={{ backgroundColor: 'var(--color-surface)' }}>
+      <section className={styles.section}>
         <div className="container">
-          <div className={styles.showcaseGrid} style={{ alignItems: 'start' }}>
-            <div>
-              <h2 style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>Prevention at a Glance</h2>
-              <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-xl)' }}>
+          <div className={styles.subscribeSplit}>
+            {/* Prevention Card */}
+            <div className={styles.preventionCard}>
+              <h2 className={styles.preventionTitle}>Prevention at a Glance</h2>
+              <p className={styles.preventionSubtitle}>
                 Immediate steps to take based on current national climate trends.
               </p>
-              <div className="grid grid-cols-2 gap-lg">
+              <div className={styles.preventionGrid}>
                 {preventionTips.map((tip) => (
-                  <div key={tip.title} className="flex gap-md">
-                    <div style={{ color: 'var(--color-text-secondary)', flexShrink: 0 }}>{tip.icon}</div>
+                  <div key={tip.title} className={styles.preventionItem}>
+                    <div className={styles.preventionIcon}>{tip.icon}</div>
                     <div>
-                      <h4 style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>{tip.title}</h4>
-                      <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>{tip.description}</p>
+                      <h4 className={styles.preventionItemTitle}>{tip.title}</h4>
+                      <p className={styles.preventionItemDesc}>{tip.description}</p>
                     </div>
                   </div>
                 ))}
               </div>
-              <a href="#" className="flex items-center gap-sm" style={{ marginTop: 'var(--spacing-xl)', fontSize: '0.875rem', fontWeight: 600 }}>
+              <a href="#" className={styles.preventionLink}>
                 View full health guide <ArrowRight size={16} />
               </a>
             </div>
 
-            <div style={{ backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: 'var(--radius-xl)', padding: 'var(--spacing-xl)' }}>
-              <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Subscribe to Local Alerts</h3>
-              <p style={{ fontSize: '0.875rem', color: '#D1D5DB', marginBottom: 'var(--spacing-lg)', lineHeight: 1.6 }}>
-                Receive real-time SMS alerts in English or Kinyarwanda when risk levels increase in your district.
+            {/* Subscribe to Local Alerts */}
+            <div>
+              <h2 className={styles.subscribeTitle}>Subscribe to Local Alerts</h2>
+              <p className={styles.subscribeSubtitle}>
+                Receive real-time SMS alerts in English or Kinyarwanda when risk levels in your district increase.
               </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-md)' }}>
-                <input type="text" placeholder="Full Name" style={{ padding: 'var(--spacing-md)', borderRadius: 'var(--radius-sm)', border: 'none', fontSize: '0.875rem' }} />
-                <input type="tel" placeholder="+250 XXX XXX XXX" style={{ padding: 'var(--spacing-md)', borderRadius: 'var(--radius-sm)', border: 'none', fontSize: '0.875rem' }} />
-                <select style={{ padding: 'var(--spacing-md)', borderRadius: 'var(--radius-sm)', border: 'none', fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
+              <div className={styles.subscribeForm}>
+                <input
+                  type="text"
+                  placeholder="Full Name"
+                  className={styles.subscribeInput}
+                />
+                <input
+                  type="tel"
+                  placeholder="+250 XXX XXX XXX"
+                  className={styles.subscribeInput}
+                />
+                <select className={styles.subscribeSelect}>
                   <option>Select District</option>
                 </select>
+                <button className={styles.subscribeButton}>
+                  Subscribe Now
+                </button>
               </div>
-              <button style={{ width: '100%', padding: 'var(--spacing-md)', borderRadius: 'var(--radius-sm)', backgroundColor: 'white', color: 'var(--color-primary)', fontWeight: 600 }}>
-                Subscribe Now
-              </button>
-              <div className="flex gap-sm" style={{ marginTop: 'var(--spacing-md)', fontSize: '0.75rem', color: '#9CA3AF', alignItems: 'flex-start' }}>
-                <Info size={14} style={{ marginTop: '2px', flexShrink: 0 }} />
-                <span>Zero Bite is a free service provided in partnership with the Ministry of Health. Standard SMS rates may apply. You can unsubscribe by texting STOP.</span>
+              <div className={styles.subscribeNote}>
+                <div className={styles.subscribeNoteIcon}>
+                  <Info size={15} />
+                </div>
+                <p className={styles.subscribeNoteText}>
+                  Zero Bite is a free service provided in partnership with the Ministry of Health. Standard SMS rates do not apply. You can unsubscribe at any time.
+                </p>
               </div>
             </div>
           </div>

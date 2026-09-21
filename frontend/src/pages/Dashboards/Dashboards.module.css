@@ -1,8 +1,30 @@
 .hero {
   padding: var(--spacing-2xl) 0;
-  text-align: center;
   background-color: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.heroGrid {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1.3fr 1fr;
+  align-items: center;
+}
+
+.heroText {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-sm);
 }
 
 .heroTitle {
@@ -15,9 +37,84 @@
 .heroSubtitle {
   font-size: 1.125rem;
   color: var(--color-text-secondary);
-  max-width: 640px;
+  max-width: 480px;
   margin: 0 auto;
   line-height: 1.6;
+}
+
+.divider {
+  width: 48px;
+  height: 3px;
+  border-radius: 2px;
+  background-color: var(--color-primary, #0B0F19);
+  margin: var(--spacing-lg) auto;
+}
+
+.roleIcons {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-xl);
+}
+
+.roleIcon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.roleIconGlyph {
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+
+.roleIconTitle {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.roleIconSub {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+}
+
+/* Angled, overlapping phone mockups */
+.heroVisualLeft,
+.heroVisualRight {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.heroVisualLeft {
+  margin-right: -8%;
+  transform: translateY(10%);
+}
+
+.heroVisualRight {
+  margin-left: -8%;
+  transform: translateY(-6%);
+}
+
+.dashboardImage {
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+  filter: drop-shadow(0 20px 40px rgba(11, 15, 25, 0.12));
+}
+
+.heroVisualLeft .dashboardImage {
+  transform: rotate(-8deg);
+}
+
+.heroVisualRight .dashboardImage {
+  transform: rotate(8deg);
 }
 
 .roleRow {
@@ -55,6 +152,40 @@
 }
 
 @media (max-width: 900px) {
+  .heroGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .heroVisualLeft,
+  .heroVisualRight {
+    margin: 0;
+    transform: none;
+  }
+
+  .heroVisualLeft {
+    order: -1;
+  }
+
+  .heroVisualRight {
+    order: 2;
+  }
+
+  .heroText {
+    order: 1;
+  }
+
+  .heroVisualLeft .dashboardImage,
+  .heroVisualRight .dashboardImage {
+    transform: rotate(0deg);
+    max-width: 260px;
+    margin: 0 auto;
+  }
+
+  .roleIcons {
+    gap: var(--spacing-lg);
+    flex-wrap: wrap;
+  }
+
   .heroTitle {
     font-size: 2.25rem;
   }
