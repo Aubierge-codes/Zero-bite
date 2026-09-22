@@ -16,10 +16,12 @@
 }
 
 .logo {
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background-color: var(--color-primary);
+  object-fit: cover;
+  display: block;
+  flex-shrink: 0;
 }
 
 .logoText {
@@ -83,11 +85,9 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background-color: #111111;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  object-fit: cover;
+  display: block;
+  flex-shrink: 0;
 }
 
 .footerLogoText {

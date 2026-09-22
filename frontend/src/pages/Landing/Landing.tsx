@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import styles from './Landing.module.css';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import {
   Satellite, Brain, Smartphone, CheckCircle2, Bot, ArrowUp, Landmark, Building2,
   Stethoscope, Globe, Shield, Droplets, Scissors, Clock, ArrowRight, Info,
-  GraduationCap, RadioTower, Download, AlertTriangle, Search
+  GraduationCap, RadioTower, Download, AlertTriangle, Loader2
 } from 'lucide-react';
 import RwandaHeroMap from '../../components/RwandaHeroMap';
 import RoleCard from '../../components/RoleCard';
+import * as predictionsService from '../../services/predictionsService';
+import * as alertsService from '../../services/alertsService';
 
 const assistantChecklist = [
   'Ask about specific district forecasts',
@@ -67,14 +70,75 @@ const roles = [
   },
 ];
 
+const FALLBACK_DISTRICTS = [
+  'Bugesera', 'Gatsibo', 'Kayonza', 'Kirehe', 'Nyagatare', 'Rwamagana',
+  'Huye', 'Gisagara', 'Kamonyi', 'Muhanga', 'Nyamagabe', 'Nyamasheke',
+  'Nyanza', 'Ruhango', 'Nyaruguru', 'Gakenke', 'Gicumbi', 'Burera',
+  'Musanze', 'Ngororero', 'Nyabihu', 'Rubavu', 'Rulindo', 'Karongi',
+  'Nyarugenge', 'Gasabo', 'Kicukiro', 'Rusizi', 'Ngoma', 'Rutsiro',
+];
+
 export default function Landing() {
   const navigate = useNavigate();
   const [heroQuery, setHeroQuery] = useState('');
+
+  const [subName, setSubName] = useState('');
+  const [subPhone, setSubPhone] = useState('');
+  const [subDistrict, setSubDistrict] = useState('');
+  const [subSuccess, setSubSuccess] = useState<string | null>(null);
+  const [subError, setSubError] = useState<string | null>(null);
 
   const checkRisk = () => {
     const params = heroQuery.trim() ? `?district=${encodeURIComponent(heroQuery.trim())}` : '';
     navigate(`/public${params}`);
   };
+
+  const { data: districts = [], isLoading: districtsLoading } = useQuery({
+    queryKey: ['all-districts'],
+    queryFn: async () => {
+      try {
+        const list = await predictionsService.listAllDistricts();
+        if (list && list.length) return list.map((d) => d.district);
+        return FALLBACK_DISTRICTS;
+      } catch {
+        return FALLBACK_DISTRICTS;
+      }
+    },
+    staleTime: 1000 * 60 * 60,
+  });
+
+  const subscribeMut = useMutation({
+    mutationFn: (payload: { phone_number: string; district: string }) => alertsService.subscribeSms(payload),
+    onSuccess: (data) => {
+      setSubSuccess(`You are now subscribed! ${data.phone || subPhone} will receive alerts for ${data.district || subDistrict}.`);
+      setSubError(null);
+      setSubName('');
+      setSubPhone('');
+      setSubDistrict('');
+      setTimeout(() => setSubSuccess(null), 6000);
+    },
+    onError: (e: any) => {
+      setSubError(e?.detail || 'Could not subscribe. Please check the phone number and try again.');
+      setSubSuccess(null);
+      setTimeout(() => setSubError(null), 7000);
+    },
+  });
+
+  const handleSubscribe = () => {
+    const phone = subPhone.trim();
+    const district = subDistrict.trim();
+    if (!phone) {
+      setSubError('Please enter your phone number.');
+      return;
+    }
+    if (!district) {
+      setSubError('Please select a district.');
+      return;
+    }
+    subscribeMut.mutate({ phone_number: phone, district });
+  };
+
+  const districtOptions = Array.isArray(districts) && districts.length ? districts : FALLBACK_DISTRICTS;
 
   return (
     <div>
@@ -248,22 +312,56 @@ export default function Landing() {
               <p className={styles.subscribeSubtitle}>
                 Receive real-time SMS alerts in English or Kinyarwanda when risk levels in your district increase.
               </p>
+              {subSuccess && (
+                <div style={{ padding: '0.875rem 1rem', backgroundColor: '#ECFDF5', color: '#065F46', borderRadius: 12, marginBottom: '1.25rem', fontSize: '0.9375rem', border: '1px solid #A7F3D0' }}>
+                  {subSuccess}
+                </div>
+              )}
+              {subError && (
+                <div style={{ padding: '0.875rem 1rem', backgroundColor: '#FEF2F2', color: '#991B1B', borderRadius: 12, marginBottom: '1.25rem', fontSize: '0.9375rem', border: '1px solid #FECACA', display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                  <AlertTriangle size={18} style={{ flexShrink: 0, marginTop: 1 }} />
+                  <span>{subError}</span>
+                </div>
+              )}
               <div className={styles.subscribeForm}>
                 <input
                   type="text"
                   placeholder="Full Name"
                   className={styles.subscribeInput}
+                  value={subName}
+                  onChange={(e) => setSubName(e.target.value)}
+                  disabled={subscribeMut.isPending}
                 />
                 <input
                   type="tel"
                   placeholder="+250 XXX XXX XXX"
                   className={styles.subscribeInput}
+                  value={subPhone}
+                  onChange={(e) => setSubPhone(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleSubscribe(); }}
+                  disabled={subscribeMut.isPending}
                 />
-                <select className={styles.subscribeSelect}>
-                  <option>Select District</option>
+                <select
+                  className={styles.subscribeSelect}
+                  value={subDistrict}
+                  onChange={(e) => setSubDistrict(e.target.value)}
+                  disabled={subscribeMut.isPending || districtsLoading}
+                  style={{ gridColumn: '1 / -1' }}
+                >
+                  <option value="">{districtsLoading ? 'Loading districts…' : 'Select District'}</option>
+                  {districtOptions.map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
                 </select>
-                <button className={styles.subscribeButton}>
-                  Subscribe Now
+                <button
+                  className={styles.subscribeButton}
+                  style={{ gridColumn: '1 / -1', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', opacity: subscribeMut.isPending ? 0.85 : 1 }}
+                  onClick={handleSubscribe}
+                  disabled={subscribeMut.isPending}
+                >
+                  {subscribeMut.isPending ? (
+                    <><Loader2 size={16} className="spin" /> Subscribing…</>
+                  ) : 'Subscribe Now'}
                 </button>
               </div>
               <div className={styles.subscribeNote}>

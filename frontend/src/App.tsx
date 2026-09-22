@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import DocumentTitle from './components/DocumentTitle';
 import PublicLayout from './layouts/PublicLayout';
 import MainDashboardLayout from './layouts/MainDashboardLayout';
@@ -20,8 +21,25 @@ import AlertsCenter from './pages/AlertsCenter/AlertsCenter';
 import DistrictList from './pages/DistrictList/DistrictList';
 import Reports from './pages/Reports/Reports';
 import Settings from './pages/Settings/Settings';
+import { useAuthStore } from './stores/authStore';
 
 export default function App() {
+  const hydrate = useAuthStore((s) => s.hydrate);
+  const isHydrated = useAuthStore((s) => s.isHydrated);
+  const token = useAuthStore((s) => s.token);
+
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
+
+  if (!isHydrated) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        Loading...
+      </div>
+    );
+  }
+
   return (
     <BrowserRouter>
       <DocumentTitle />
@@ -35,7 +53,10 @@ export default function App() {
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/help" element={<Help />} />
-          <Route path="/login" element={<Login />} />
+          <Route
+            path="/login"
+            element={token ? <Navigate to="/national" replace /> : <Login />}
+          />
           <Route path="/public" element={<PublicDashboard />} />
           <Route path="*" element={<NotFound />} />
         </Route>

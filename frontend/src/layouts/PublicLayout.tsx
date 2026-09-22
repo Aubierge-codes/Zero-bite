@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, Link } from 'react-router-dom';
-import { Menu, X, Activity } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import styles from './PublicLayout.module.css';
 
 export default function PublicLayout() {
@@ -11,7 +11,7 @@ export default function PublicLayout() {
       <header className={styles.header}>
         <div className="container flex justify-between items-center">
           <div className="flex items-center gap-sm">
-            <div className={styles.logo}></div>
+            <img src="/zero.png" alt="Zero Bite logo" className={styles.logo} />
             <span className={styles.logoText}>Zero Bite</span>
           </div>
           <nav className={`${styles.nav} ${navOpen ? styles.navOpen : ''}`}>
@@ -38,9 +38,7 @@ export default function PublicLayout() {
           <div className={styles.footerGrid}>
            <div className={styles.footerBrand}>
              <div className={styles.footerLogoRow}>
-                <div className={styles.footerLogo}>
-                  <Activity size={26} strokeWidth={2.5} />
-                </div>
+                <img src="/zero.png" alt="Zero Bite logo" className={styles.footerLogo} />
                 <span className={styles.footerLogoText}>Zero Bite</span>
              </div>
              <p>Protecting communities through satellite-driven AI predictions and real-time climate intelligence.</p>
