@@ -1,8 +1,25 @@
 .hero {
   padding: var(--spacing-2xl) 0;
-  text-align: center;
-  background-color: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
+  background-color: #FAFAFA;
+  border-bottom: 1px solid #E5E7EB;
+  overflow: hidden;
+}
+
+.heroGrid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: var(--spacing-2xl);
+  align-items: center;
+  text-align: left;
+}
+
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6B7280;
+  margin-bottom: var(--spacing-sm);
 }
 
 .heroTitle {
@@ -10,14 +27,29 @@
   font-weight: 800;
   letter-spacing: -0.02em;
   margin-bottom: var(--spacing-md);
+  color: #0B0F19;
 }
 
 .heroSubtitle {
   font-size: 1.125rem;
-  color: var(--color-text-secondary);
-  max-width: 640px;
-  margin: 0 auto;
+  color: #6B7280;
+  max-width: 480px;
   line-height: 1.6;
+}
+
+.heroVisual {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.satelliteImage {
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 20px 40px rgba(11, 15, 25, 0.08));
 }
 
 .section {
@@ -38,16 +70,94 @@
 .statValue {
   font-size: 2.5rem;
   font-weight: 800;
+  color: #0B0F19;
 }
 
 .statLabel {
   font-size: 0.875rem;
-  color: var(--color-text-secondary);
+  color: #6B7280;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
+/* "What We Stand For" band — same banded treatment as Landing's How It Works section */
+.valuesSection {
+  background-color: #FAFAFA;
+  border-top: 1px solid #E5E7EB;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.valuesTitle {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #0B0F19;
+  text-align: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.valuesSubtitle {
+  text-align: center;
+  color: #6B7280;
+  max-width: 520px;
+  margin: 0 auto var(--spacing-2xl);
+  line-height: 1.6;
+}
+
+.valueCard {
+  text-align: left;
+  background-color: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 16px;
+  padding: var(--spacing-lg);
+}
+
+.valueIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.valueCard:nth-child(1) .valueIcon { background-color: #EFF6FF; color: #3B82F6; }
+.valueCard:nth-child(2) .valueIcon { background-color: #F5F3FF; color: #8B5CF6; }
+.valueCard:nth-child(3) .valueIcon { background-color: #ECFDF5; color: #10B981; }
+.valueCard:nth-child(4) .valueIcon { background-color: #FFFBEB; color: #F59E0B; }
+
+.valueTitle {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #0B0F19;
+  margin-bottom: 0.5rem;
+}
+
+.valueDescription {
+  font-size: 0.875rem;
+  color: #6B7280;
+  line-height: 1.6;
+}
+
 @media (max-width: 900px) {
+  .heroGrid {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .heroSubtitle {
+    margin: 0 auto;
+  }
+
+  .heroVisual {
+    order: -1;
+  }
+
+  .satelliteImage {
+    max-width: 360px;
+  }
+
   .heroTitle {
     font-size: 2.25rem;
   }

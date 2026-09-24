@@ -63,15 +63,25 @@ export default function Dashboards() {
 
   return (
     <div>
-      <section className={styles.hero}>
-        <div className="container">
-          <h1 className={styles.heroTitle}>Dashboards Built for Every Role</h1>
-          <p className={styles.heroSubtitle}>
-            From national strategy to village-level response, Zero Bite gives each part of the health system the exact
-            view it needs.
-          </p>
-        </div>
-      </section>
+    <section className={styles.hero}>
+  <div className={`container ${styles.heroGrid}`}>
+    <div className={styles.heroVisual}>
+      <img src="/dash.png" alt="National dashboard view" className={styles.dashboardImage} />
+    </div>
+
+    <div className={styles.heroText}>
+      <h1 className={styles.heroTitle}>Dashboards Built for Every Role</h1>
+      <p className={styles.heroSubtitle}>
+        From national strategy to village-level response, Zero Bite gives each part of the health system the exact
+        view it needs.
+      </p>
+    </div>
+
+    <div className={styles.heroVisual}>
+      <img src="/das.png" alt="District dashboard view" className={styles.dashboardImage} />
+    </div>
+  </div>
+</section>
 
       <section className="container" style={{ padding: 'var(--spacing-2xl) 0' }}>
         <h2 style={{ fontSize: '1.25rem', textAlign: 'center', marginBottom: 'var(--spacing-xl)', color: 'var(--color-text-secondary)' }}>

@@ -38,15 +38,22 @@ export default function About() {
 
   return (
     <div>
-      <section className={styles.hero}>
-        <div className="container">
-          <h1 className={styles.heroTitle}>About Zero Bite</h1>
-          <p className={styles.heroSubtitle}>
-            Zero Bite is Rwanda's climate-health intelligence platform, built to turn satellite and weather data into
-            early warnings that stop malaria outbreaks before they start.
-          </p>
-        </div>
-      </section>
+    <section className={styles.hero}>
+  <div className={`container ${styles.heroGrid}`}>
+    <div className={styles.heroText}>
+      <p className={styles.eyebrow}>About Zero Bite</p>
+      <h1 className={styles.heroTitle}>About Zero Bite</h1>
+      <p className={styles.heroSubtitle}>
+        Zero Bite is Rwanda's climate-health intelligence platform, built to turn satellite and weather data into
+        early warnings that stop malaria outbreaks before they start.
+      </p>
+    </div>
+
+    <div className={styles.heroVisual}>
+      <img src="/satelite.png" alt="Satellite monitoring climate data" className={styles.satelliteImage} />
+    </div>
+  </div>
+</section>
 
       <section className={styles.section}>
         <div className="container">
@@ -84,20 +91,20 @@ export default function About() {
         </div>
       </section>
 
-      <section className={styles.section} style={{ backgroundColor: 'var(--color-surface)', borderTop: '1px solid var(--color-border)' }}>
+      <section className={`${styles.section} ${styles.valuesSection}`}>
         <div className="container">
-          <h2 style={{ fontSize: '2rem', textAlign: 'center', marginBottom: '0.5rem' }}>What We Stand For</h2>
-          <p style={{ textAlign: 'center', color: 'var(--color-text-secondary)', maxWidth: '600px', margin: '0 auto var(--spacing-2xl)' }}>
+          <h2 className={styles.valuesTitle}>What We Stand For</h2>
+          <p className={styles.valuesSubtitle}>
             The principles that shape every model we ship and every alert we send.
           </p>
           <div className="grid grid-cols-4 gap-lg">
             {values.map((value) => (
-              <div key={value.title} className="card" style={{ textAlign: 'left' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#F0F4F8', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 'var(--spacing-md)' }}>
+              <div key={value.title} className={styles.valueCard}>
+                <div className={styles.valueIcon}>
                   {value.icon}
                 </div>
-                <h3 style={{ fontSize: '1.0625rem', marginBottom: '0.5rem' }}>{value.title}</h3>
-                <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>{value.description}</p>
+                <h3 className={styles.valueTitle}>{value.title}</h3>
+                <p className={styles.valueDescription}>{value.description}</p>
               </div>
             ))}
           </div>

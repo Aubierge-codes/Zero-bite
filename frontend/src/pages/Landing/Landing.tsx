@@ -1,11 +1,24 @@
 import { useState, type FormEvent } from 'react';
 import styles from './Landing.module.css';
 import { useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
 import { Satellite, Brain, Smartphone, CheckCircle2, Bot, ArrowUp, Landmark, Building2, Stethoscope, Globe, Shield, Droplets, Scissors, Clock, ArrowRight, Info, GraduationCap, RadioTower, Download, Loader2 } from 'lucide-react';
 import RwandaHeroMap from '../../components/RwandaHeroMap';
 import RoleCard from '../../components/RoleCard';
 import Reveal from '../../components/Reveal';
 import CountUp from '../../components/CountUp';
+=======
+import { useQuery, useMutation } from '@tanstack/react-query';
+import {
+  Satellite, Brain, Smartphone, CheckCircle2, Bot, ArrowUp, Landmark, Building2,
+  Stethoscope, Globe, Shield, Droplets, Scissors, Clock, ArrowRight, Info,
+  GraduationCap, RadioTower, Download, AlertTriangle, Loader2
+} from 'lucide-react';
+import RwandaHeroMap from '../../components/RwandaHeroMap';
+import RoleCard from '../../components/RoleCard';
+import * as predictionsService from '../../services/predictionsService';
+import * as alertsService from '../../services/alertsService';
+>>>>>>> origin/main
 
 const assistantChecklist = [
   'Ask about specific district forecasts',
@@ -15,10 +28,10 @@ const assistantChecklist = [
 ];
 
 const preventionTips = [
-  { icon: <Shield size={20} />, title: 'Mosquito Nets', description: 'Ensure all household members sleep under insecticide-treated nets.' },
-  { icon: <Droplets size={20} />, title: 'Clear Water', description: 'Empty out or cover all standing water near your dwelling.' },
-  { icon: <Scissors size={20} />, title: 'Bush Clearing', description: 'Keep grass short and clear dense vegetation around dwellings.' },
-  { icon: <Clock size={20} />, title: 'Peak Exposure', description: 'Avoid being outdoors during peak biting times (dusk till dawn).' },
+  { icon: <Shield size={16} />, title: 'Mosquito Nets', description: 'Ensure all household members sleep under insecticide-treated nets.' },
+  { icon: <Droplets size={16} />, title: 'Clear Water', description: 'Empty or cover all containers of standing water near homes.' },
+  { icon: <Scissors size={16} />, title: 'Bush Clearing', description: 'Keep grass short and clear dense vegetation around dwellings.' },
+  { icon: <Clock size={16} />, title: 'Peak Exposure', description: 'Avoid being outdoors during dusk and dawn peak biting hours.' },
 ];
 
 const trustStats = [
@@ -65,15 +78,30 @@ const roles = [
   },
 ];
 
+const FALLBACK_DISTRICTS = [
+  'Bugesera', 'Gatsibo', 'Kayonza', 'Kirehe', 'Nyagatare', 'Rwamagana',
+  'Huye', 'Gisagara', 'Kamonyi', 'Muhanga', 'Nyamagabe', 'Nyamasheke',
+  'Nyanza', 'Ruhango', 'Nyaruguru', 'Gakenke', 'Gicumbi', 'Burera',
+  'Musanze', 'Ngororero', 'Nyabihu', 'Rubavu', 'Rulindo', 'Karongi',
+  'Nyarugenge', 'Gasabo', 'Kicukiro', 'Rusizi', 'Ngoma', 'Rutsiro',
+];
+
 export default function Landing() {
   const navigate = useNavigate();
   const [heroQuery, setHeroQuery] = useState('');
+
+  const [subName, setSubName] = useState('');
+  const [subPhone, setSubPhone] = useState('');
+  const [subDistrict, setSubDistrict] = useState('');
+  const [subSuccess, setSubSuccess] = useState<string | null>(null);
+  const [subError, setSubError] = useState<string | null>(null);
 
   const checkRisk = () => {
     const params = heroQuery.trim() ? `?district=${encodeURIComponent(heroQuery.trim())}` : '';
     navigate(`/public${params}`);
   };
 
+<<<<<<< HEAD
   const [subscribeForm, setSubscribeForm] = useState({ name: '', phone: '', district: '' });
   const [subscribeError, setSubscribeError] = useState('');
   const [subscribeStatus, setSubscribeStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
@@ -93,15 +121,68 @@ export default function Landing() {
     setTimeout(() => setSubscribeStatus('success'), 1000);
   };
 
+=======
+  const { data: districts = [], isLoading: districtsLoading } = useQuery({
+    queryKey: ['all-districts'],
+    queryFn: async () => {
+      try {
+        const list = await predictionsService.listAllDistricts();
+        if (list && list.length) return list.map((d) => d.district);
+        return FALLBACK_DISTRICTS;
+      } catch {
+        return FALLBACK_DISTRICTS;
+      }
+    },
+    staleTime: 1000 * 60 * 60,
+  });
+
+  const subscribeMut = useMutation({
+    mutationFn: (payload: { phone_number: string; district: string }) => alertsService.subscribeSms(payload),
+    onSuccess: (data) => {
+      setSubSuccess(`You are now subscribed! ${data.phone || subPhone} will receive alerts for ${data.district || subDistrict}.`);
+      setSubError(null);
+      setSubName('');
+      setSubPhone('');
+      setSubDistrict('');
+      setTimeout(() => setSubSuccess(null), 6000);
+    },
+    onError: (e: any) => {
+      setSubError(e?.detail || 'Could not subscribe. Please check the phone number and try again.');
+      setSubSuccess(null);
+      setTimeout(() => setSubError(null), 7000);
+    },
+  });
+
+  const handleSubscribe = () => {
+    const phone = subPhone.trim();
+    const district = subDistrict.trim();
+    if (!phone) {
+      setSubError('Please enter your phone number.');
+      return;
+    }
+    if (!district) {
+      setSubError('Please select a district.');
+      return;
+    }
+    subscribeMut.mutate({ phone_number: phone, district });
+  };
+
+  const districtOptions = Array.isArray(districts) && districts.length ? districts : FALLBACK_DISTRICTS;
+
+>>>>>>> origin/main
   return (
     <div>
       {/* Hero Section */}
       <section className={styles.hero}>
         <div className="container" style={{ position: 'relative' }}>
           <div className={styles.heroContent}>
+<<<<<<< HEAD
             <div className="badge badge-low" style={{ marginBottom: '1rem', padding: '0.375rem 0.875rem', fontSize: '0.9375rem' }}>
               Powered by AI & Satellite Data
             </div>
+=======
+         
+>>>>>>> origin/main
             <h1 className={styles.heroTitle}>Climate Intelligence for a Malaria-Free Rwanda.</h1>
             <p className={styles.heroSubtitle}>
               Predictive risk mapping for climate-driven health crises. Zero Bite gives you the data to act before the outbreak.
@@ -116,12 +197,29 @@ export default function Landing() {
               />
               <button onClick={checkRisk}>Check Risk</button>
             </div>
+<<<<<<< HEAD
             <p style={{ fontSize: '0.9375rem', color: 'var(--color-text-tertiary)' }}>
               Trusted by <strong>30+ District Health Officers</strong> across Rwanda.
             </p>
+=======
+            <div className={styles.trustRow}>
+              <div className={styles.avatarStack}>
+                <span>DH</span>
+                <span>MK</span>
+                <span>+</span>
+              </div>
+              <p>
+                Trusted by <strong>30+ District Health Officers</strong> across Rwanda.
+              </p>
+            </div>
+>>>>>>> origin/main
           </div>
+
           <div className={styles.mapPlaceholder}>
-            <RwandaHeroMap />
+            <div className={styles.mapCard}>
+          
+              <RwandaHeroMap />
+            </div>
           </div>
         </div>
       </section>
@@ -171,6 +269,7 @@ export default function Landing() {
       <section className={styles.section}>
         <div className="container">
           <div className={styles.showcaseGrid}>
+<<<<<<< HEAD
             <Reveal>
               <div>
                 <div className="badge badge-low" style={{ marginBottom: '1rem', fontSize: '0.9375rem', padding: '0.375rem 0.875rem' }}>Virtual Assistant</div>
@@ -187,6 +286,22 @@ export default function Landing() {
                 </ul>
               </div>
             </Reveal>
+=======
+            <div>
+              
+              <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Your 24/7 Climate Intelligence Partner</h2>
+              <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.125rem', lineHeight: 1.6 }}>
+                The Zero Bite AI Assistant understands the complex relationships between rainfall, temperature, and vector breeding. Get instant insights in your language.
+              </p>
+              <ul className={styles.checklist}>
+                {assistantChecklist.map((item) => (
+                  <li key={item}>
+                    <CheckCircle2 size={18} color="var(--color-risk-low)" style={{ flexShrink: 0 }} /> {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+>>>>>>> origin/main
 
             <Reveal delay={150}>
               <div className={styles.chatCard}>
@@ -240,32 +355,50 @@ export default function Landing() {
       </section>
 
       {/* Prevention at a Glance + Subscribe */}
-      <section className={styles.section} style={{ backgroundColor: 'var(--color-surface)' }}>
+      <section className={styles.section}>
         <div className="container">
+<<<<<<< HEAD
           <div className={styles.showcaseGrid} style={{ alignItems: 'start' }}>
             <Reveal>
             <div>
               <h2 style={{ fontSize: '2rem', marginBottom: '0.25rem' }}>Prevention at a Glance</h2>
               <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-xl)', fontSize: '1.0625rem' }}>
+=======
+          <div className={styles.subscribeSplit}>
+            {/* Prevention Card */}
+            <div className={styles.preventionCard}>
+              <h2 className={styles.preventionTitle}>Prevention at a Glance</h2>
+              <p className={styles.preventionSubtitle}>
+>>>>>>> origin/main
                 Immediate steps to take based on current national climate trends.
               </p>
-              <div className="grid grid-cols-2 gap-lg">
+              <div className={styles.preventionGrid}>
                 {preventionTips.map((tip) => (
-                  <div key={tip.title} className="flex gap-md">
-                    <div style={{ color: 'var(--color-text-secondary)', flexShrink: 0 }}>{tip.icon}</div>
+                  <div key={tip.title} className={styles.preventionItem}>
+                    <div className={styles.preventionIcon}>{tip.icon}</div>
                     <div>
+<<<<<<< HEAD
                       <h4 style={{ fontSize: '1.125rem', marginBottom: '0.25rem' }}>{tip.title}</h4>
                       <p style={{ fontSize: '0.9375rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>{tip.description}</p>
+=======
+                      <h4 className={styles.preventionItemTitle}>{tip.title}</h4>
+                      <p className={styles.preventionItemDesc}>{tip.description}</p>
+>>>>>>> origin/main
                     </div>
                   </div>
                 ))}
               </div>
+<<<<<<< HEAD
               <a href="#" className="flex items-center gap-sm" style={{ marginTop: 'var(--spacing-xl)', fontSize: '0.9375rem', fontWeight: 600 }}>
+=======
+              <a href="#" className={styles.preventionLink}>
+>>>>>>> origin/main
                 View full health guide <ArrowRight size={16} />
               </a>
             </div>
             </Reveal>
 
+<<<<<<< HEAD
             <Reveal delay={150}>
             <div style={{ backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: 'var(--radius-xl)', padding: 'var(--spacing-xl)' }}>
               {subscribeStatus === 'success' ? (
@@ -328,6 +461,73 @@ export default function Landing() {
               <div className="flex gap-sm" style={{ marginTop: 'var(--spacing-md)', fontSize: '0.75rem', color: '#9CA3AF', alignItems: 'flex-start' }}>
                 <Info size={14} style={{ marginTop: '2px', flexShrink: 0 }} />
                 <span>Zero Bite is a free service provided in partnership with the Ministry of Health. Standard SMS rates may apply. You can unsubscribe by texting STOP.</span>
+=======
+            {/* Subscribe to Local Alerts */}
+            <div>
+              <h2 className={styles.subscribeTitle}>Subscribe to Local Alerts</h2>
+              <p className={styles.subscribeSubtitle}>
+                Receive real-time SMS alerts in English or Kinyarwanda when risk levels in your district increase.
+              </p>
+              {subSuccess && (
+                <div style={{ padding: '0.875rem 1rem', backgroundColor: '#ECFDF5', color: '#065F46', borderRadius: 12, marginBottom: '1.25rem', fontSize: '0.9375rem', border: '1px solid #A7F3D0' }}>
+                  {subSuccess}
+                </div>
+              )}
+              {subError && (
+                <div style={{ padding: '0.875rem 1rem', backgroundColor: '#FEF2F2', color: '#991B1B', borderRadius: 12, marginBottom: '1.25rem', fontSize: '0.9375rem', border: '1px solid #FECACA', display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                  <AlertTriangle size={18} style={{ flexShrink: 0, marginTop: 1 }} />
+                  <span>{subError}</span>
+                </div>
+              )}
+              <div className={styles.subscribeForm}>
+                <input
+                  type="text"
+                  placeholder="Full Name"
+                  className={styles.subscribeInput}
+                  value={subName}
+                  onChange={(e) => setSubName(e.target.value)}
+                  disabled={subscribeMut.isPending}
+                />
+                <input
+                  type="tel"
+                  placeholder="+250 XXX XXX XXX"
+                  className={styles.subscribeInput}
+                  value={subPhone}
+                  onChange={(e) => setSubPhone(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleSubscribe(); }}
+                  disabled={subscribeMut.isPending}
+                />
+                <select
+                  className={styles.subscribeSelect}
+                  value={subDistrict}
+                  onChange={(e) => setSubDistrict(e.target.value)}
+                  disabled={subscribeMut.isPending || districtsLoading}
+                  style={{ gridColumn: '1 / -1' }}
+                >
+                  <option value="">{districtsLoading ? 'Loading districts…' : 'Select District'}</option>
+                  {districtOptions.map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+                <button
+                  className={styles.subscribeButton}
+                  style={{ gridColumn: '1 / -1', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', opacity: subscribeMut.isPending ? 0.85 : 1 }}
+                  onClick={handleSubscribe}
+                  disabled={subscribeMut.isPending}
+                >
+                  {subscribeMut.isPending ? (
+                    <><Loader2 size={16} className="spin" /> Subscribing…</>
+                  ) : 'Subscribe Now'}
+                </button>
+              </div>
+              <div className={styles.subscribeNote}>
+                <div className={styles.subscribeNoteIcon}>
+                  <Info size={15} />
+                </div>
+                <p className={styles.subscribeNoteText}>
+                  Zero Bite is a free service provided in partnership with the Ministry of Health. Standard SMS rates do not apply. You can unsubscribe at any time.
+                </p>
+>>>>>>> origin/main
               </div>
               </>
               )}

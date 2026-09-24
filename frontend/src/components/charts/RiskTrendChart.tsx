@@ -1,6 +1,6 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const data = [
+const demoData = [
   { week: 'W1', historical: 32, predicted: null },
   { week: 'W2', historical: 38, predicted: null },
   { week: 'W3', historical: 52, predicted: 52 },
@@ -9,10 +9,22 @@ const data = [
   { week: 'W6', historical: null, predicted: 37 },
 ];
 
-export default function RiskTrendChart() {
+export interface RiskTrendDatum {
+  week: string;
+  historical: number | null;
+  predicted: number | null;
+}
+
+interface Props {
+  data?: RiskTrendDatum[];
+}
+
+export default function RiskTrendChart({ data }: Props) {
+  const chartData = (data && data.length > 0 ? data : demoData) as any[];
+
   return (
     <ResponsiveContainer width="100%" height={220}>
-      <LineChart data={data} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+      <LineChart data={chartData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--color-divider)" vertical={false} />
         <XAxis dataKey="week" tick={{ fontSize: 12, fill: 'var(--color-text-tertiary)' }} axisLine={false} tickLine={false} />
         <YAxis domain={[0, 100]} tick={{ fontSize: 12, fill: 'var(--color-text-tertiary)' }} axisLine={false} tickLine={false} />
