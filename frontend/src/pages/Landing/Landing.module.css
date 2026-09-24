@@ -26,13 +26,9 @@
 }
 
 .heroTitle {
-<<<<<<< HEAD
-  font-size: 4rem;
-=======
   font-family: Didot, serif;
   font-size: 3.875rem;
   line-height: 1.04;
->>>>>>> origin/main
   font-weight: 800;
   color: #111827;
   letter-spacing: -0.025em;
@@ -40,18 +36,11 @@
 }
 
 .heroSubtitle {
-<<<<<<< HEAD
-  font-size: 1.375rem;
-  color: var(--color-text-secondary);
-  margin-bottom: var(--spacing-xl);
-  line-height: 1.6;
-=======
   font-size: 1rem;
   color: #6B7280;
   margin-bottom: 1.75rem;
   line-height: 1.65;
   max-width: 420px;
->>>>>>> origin/main
 }
 
 .searchBox {
@@ -78,13 +67,8 @@
   flex: 1;
   border: none;
   background: transparent;
-<<<<<<< HEAD
-  padding: var(--spacing-sm) var(--spacing-md);
-  font-size: 1.0625rem;
-=======
   padding: 0.5rem 0;
   font-size: 0.9375rem;
->>>>>>> origin/main
   outline: none;
   color: #111827;
   min-width: 0;
@@ -464,19 +448,12 @@
 
   .heroTitle {
     font-size: 2.75rem;
-<<<<<<< HEAD
-  }
-
-  .heroSubtitle {
-    font-size: 1.1875rem;
-=======
     line-height: 1.06;
   }
 
   .heroSubtitle {
     font-size: 1rem;
     max-width: none;
->>>>>>> origin/main
   }
 
   .mapPlaceholder {

@@ -1,11 +1,7 @@
-git diff --mergeimport { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-<<<<<<< HEAD
-import { Search, MapPin, AlertTriangle, Shield, Droplets, Home, Hospital, Calendar, Thermometer, Info, Circle, CheckCircle2, Loader2 } from 'lucide-react';
-=======
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Search, MapPin, AlertTriangle, Shield, Droplets, Home, Hospital, Calendar, Thermometer, Info, Circle, Loader2 } from 'lucide-react';
->>>>>>> origin/main
 import FloatingChatBubble from '../../components/FloatingChatBubble';
 import * as predictionsService from '../../services/predictionsService';
 import * as alertsService from '../../services/alertsService';
@@ -167,23 +163,6 @@ export default function PublicDashboard() {
     if (fromLanding) lookup(fromLanding);
   }, []);
 
-<<<<<<< HEAD
-  const [subPhone, setSubPhone] = useState('');
-  const [subError, setSubError] = useState('');
-  const [subStatus, setSubStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
-
-  const handleSubscribe = (e: FormEvent) => {
-    e.preventDefault();
-    if (!/^\+?[\d\s]{9,15}$/.test(subPhone.trim())) {
-      setSubError('Enter a valid phone number.');
-      return;
-    }
-    setSubError('');
-    setSubStatus('submitting');
-    setTimeout(() => setSubStatus('success'), 1000);
-  };
-
-=======
   const { data: riskData, isLoading: riskLoading, error: riskError } = useQuery<PublicDistrictRisk | null>({
     queryKey: ['public-district', selectedKey],
     queryFn: async () => {
@@ -235,7 +214,6 @@ export default function PublicDashboard() {
 
   const band = riskBand(riskScore);
 
->>>>>>> origin/main
   return (
     <div className="container" style={{ padding: 'var(--spacing-2xl) 0' }}>
       <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-2xl)' }}>
@@ -411,41 +389,8 @@ export default function PublicDashboard() {
            </div>
            
            <div className="card" style={{ backgroundColor: 'var(--color-primary)', color: 'white' }}>
-              {subStatus === 'success' ? (
-                <div style={{ textAlign: 'center', padding: 'var(--spacing-sm) 0', animation: 'scaleIn 300ms ease-out' }}>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'rgba(76, 175, 80, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto var(--spacing-sm)', color: '#86EFAC' }}>
-                    <CheckCircle2 size={20} />
-                  </div>
-                  <h3 style={{ margin: 0, fontSize: '1.0625rem', marginBottom: '0.25rem' }}>You're protected</h3>
-                  <p style={{ fontSize: '0.8125rem', color: '#D1D5DB' }}>Weekly {district.label} alerts will be sent to {subPhone}.</p>
-                </div>
-              ) : (
-              <>
               <h3 style={{ margin: 0, fontSize: '1.25rem', marginBottom: '0.5rem' }}>Stay Protected</h3>
               <p style={{ fontSize: '0.875rem', color: '#D1D5DB', marginBottom: 'var(--spacing-md)' }}>Get weekly malaria risk alerts for your village via SMS. No smartphone required.</p>
-<<<<<<< HEAD
-              <form onSubmit={handleSubscribe}>
-                <input
-                  type="text"
-                  placeholder="Enter phone number (e.g., 078...)"
-                  value={subPhone}
-                  onChange={(e) => setSubPhone(e.target.value)}
-                  style={{ width: '100%', padding: 'var(--spacing-md)', borderRadius: 'var(--radius-sm)', border: 'none', marginBottom: 'var(--spacing-sm)' }}
-                />
-                {subError && <p style={{ color: '#FCA5A5', fontSize: '0.8125rem', marginBottom: 'var(--spacing-sm)' }}>{subError}</p>}
-                <button
-                  type="submit"
-                  disabled={subStatus === 'submitting'}
-                  style={{ width: '100%', padding: 'var(--spacing-md)', borderRadius: 'var(--radius-sm)', backgroundColor: 'white', color: 'var(--color-primary)', fontWeight: 600, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', opacity: subStatus === 'submitting' ? 0.7 : 1 }}
-                >
-                  {subStatus === 'submitting' ? (
-                    <><Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} /> Subscribing...</>
-                  ) : 'Subscribe Free'}
-                </button>
-              </form>
-              </>
-              )}
-=======
               {smsSuccess && (
                 <div style={{ padding: 'var(--spacing-sm) var(--spacing-md)', backgroundColor: 'rgba(34,197,94,0.18)', borderRadius: 'var(--radius-sm)', fontSize: '0.875rem', marginBottom: 'var(--spacing-sm)', color: '#BBF7D0', border: '1px solid rgba(34,197,94,0.35)' }}>
                   {smsSuccess}
@@ -474,7 +419,6 @@ export default function PublicDashboard() {
                   <><Loader2 size={16} className="spin" /> Subscribing…</>
                 ) : 'Subscribe Free'}
               </button>
->>>>>>> origin/main
            </div>
         </div>
       </div>
