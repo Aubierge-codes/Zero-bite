@@ -1,0 +1,25 @@
+{
+  "version": "v20260513-rwanda-128,681rows",
+  "accuracy": 0.9608,
+  "precision": 0.9611,
+  "recall": 0.9608,
+  "f1_score": 0.9609,
+  "training_samples": 128681,
+  "test_samples": 25737,
+  "feature_importance": {
+    "rainfall_mm": 0.0345,
+    "temperature_c": 0.0131,
+    "ndvi": 0.0764,
+    "humidity_pct": 0.019,
+    "soil_moisture": 0.1019,
+    "river_buffer_m": 0.0135,
+    "depression_index": 0.0148,
+    "flood_risk_index": 0.0337,
+    "standing_water_km2": 0.0888,
+    "sunshine_hours": 0.001,
+    "population_density": 0.022,
+    "season_weight": 0.5812
+  },
+  "evaluated_at": "2026-09-25T09:19:35.598709Z",
+  "note": "Evaluated against the rule-derived risk labels of dataset_final.csv (no clinical case data)."
+}
