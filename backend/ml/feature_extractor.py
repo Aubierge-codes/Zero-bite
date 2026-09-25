@@ -1,224 +1,184 @@
 """
 Feature Extractor
-Extracts ML-ready features from satellite imagery and weather data
-for each 500m grid cell in the target region.
+Builds the 12 ML features for every Rwandan district from REAL data.
 
-Features extracted:
-- rainfall_mm:        7-day accumulated rainfall (CHIRPS/OpenWeatherMap)
-- temperature_c:      Land Surface Temperature (Landsat-8 Band 10)
-- ndvi:               Normalized Difference Vegetation Index (Sentinel-2 B8/B4)
-- humidity_pct:       Relative humidity (weather station / ERA5)
-- soil_moisture:      Volumetric soil water (Sentinel-1 SAR)
-- river_buffer_m:     Distance to nearest water body (OSM/DEM)
-- depression_index:   Topographic Wetness Index (SRTM DEM)
-- flood_risk_index:   Flood risk 0–1 (rainfall + soil saturation + elevation)
-- standing_water_km2: Standing water area km² (Sentinel-2 optical)
-- sunshine_hours:     Daily sunshine hours (Open-Meteo / Meteo Rwanda)
-- population_density: People per km² (NISR Rwanda census)
-- season_weight:      1.0 = rainy season (MAM/OND), 0.5 = dry season
+Live data (Open-Meteo, no API key needed):
+- rainfall_mm       daily precipitation sum
+- temperature_c     daily mean 2 m temperature
+- humidity_pct      daily mean relative humidity
+- sunshine_hours    daily sunshine duration
+- soil_moisture     Antecedent Precipitation Index derived from the rainfall series
+                    (same method the model was trained with, see derive_soil_moisture.py)
+
+Static data (scripts/build_static_features.py — NISR 2022 census, SRTM, OSM):
+- river_buffer_m, depression_index, population_density, elevation, flood_risk_base
+
+Derived exactly like the training set (scripts/build_training_dataset.py):
+- flood_risk_index, standing_water_km2, season_weight
+- ndvi: seasonal proxy (no free keyless NDVI feed; identical to the proxy used in training)
+
+Nothing here is randomly generated. If the weather service is unreachable an
+error is raised so callers can report it instead of showing invented numbers.
 """
 
-import uuid
+import asyncio
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from typing import Dict, List, Optional
+
 import numpy as np
-from datetime import datetime
-from typing import List, Dict
+import requests
 from loguru import logger
+
+from api.config import get_settings
+from data_pipeline.rwanda_districts import DISTRICTS, DISTRICT_INFO, canonical_district
+from scripts.build_static_features import DISTRICT_STATIC
+
+settings = get_settings()
+
+PAST_DAYS     = 60     # history used for the soil-moisture index + trend charts
+FORECAST_DAYS = 16     # Open-Meteo forecast horizon
+RAINY_MONTHS  = {3, 4, 5, 10, 11, 12}
+KIGALI_TZ     = timezone(timedelta(hours=2))   # Rwanda is UTC+2 year-round
+
+STATIC = {d["district"]: d for d in DISTRICT_STATIC}
+
+
+class WeatherUnavailable(RuntimeError):
+    """Raised when the live weather service cannot be reached."""
+
+
+def kigali_today():
+    return datetime.now(KIGALI_TZ).date()
+
+
+def _training_rain_max() -> float:
+    """Max daily rainfall in the training set — the flood-risk index is scaled by it."""
+    try:
+        import pandas as pd
+        csv = Path("training_data/dataset_final.csv")
+        if csv.exists():
+            return float(pd.read_csv(csv, usecols=["rainfall_mm"])["rainfall_mm"].max()) or 100.0
+    except Exception as e:  # pragma: no cover - only a scaling constant
+        logger.warning(f"Could not read training rainfall max: {e}")
+    return 100.0
+
+
+_RAIN_MAX: Optional[float] = None
+
+
+def _rain_max() -> float:
+    global _RAIN_MAX
+    if _RAIN_MAX is None:
+        _RAIN_MAX = _training_rain_max()
+    return _RAIN_MAX
+
+
+def _fetch_weather_sync(districts: List[tuple]) -> Dict[str, dict]:
+    """One batched Open-Meteo request for all districts. Blocking — run in a thread."""
+    params = {
+        "latitude":      ",".join(str(d[2]) for d in districts),
+        "longitude":     ",".join(str(d[3]) for d in districts),
+        "daily":         "precipitation_sum,temperature_2m_mean,relative_humidity_2m_mean,sunshine_duration",
+        "past_days":     PAST_DAYS,
+        "forecast_days": FORECAST_DAYS,
+        "timezone":      "Africa/Kigali",
+    }
+    try:
+        resp = requests.get(settings.OPEN_METEO_BASE_URL, params=params, timeout=45)
+        resp.raise_for_status()
+        payload = resp.json()
+    except Exception as exc:
+        raise WeatherUnavailable(f"Open-Meteo request failed: {exc}") from exc
+
+    if isinstance(payload, dict):
+        payload = [payload]
+    if len(payload) != len(districts):
+        raise WeatherUnavailable("Open-Meteo returned an unexpected number of locations")
+    return {d[0]: p["daily"] for d, p in zip(districts, payload)}
+
+
+def _fill(values: list, default: float) -> List[float]:
+    """Replace None gaps with the previous valid value (weather series are continuous)."""
+    out, last = [], default
+    for v in values:
+        if v is None:
+            out.append(last)
+        else:
+            last = float(v)
+            out.append(last)
+    return out
+
+
+def build_daily_features(district: str, daily: dict) -> List[dict]:
+    """Turn one district's daily weather series into ML feature dicts (one per day)."""
+    info   = DISTRICT_INFO[district]
+    static = STATIC[district]
+    rain_max = _rain_max()
+
+    rain  = _fill(daily["precipitation_sum"], 0.0)
+    temp  = _fill(daily["temperature_2m_mean"], 24.0)
+    hum   = _fill(daily["relative_humidity_2m_mean"], 70.0)
+    sun_s = _fill(daily["sunshine_duration"], 0.0)
+
+    features, soil = [], 0.3
+    for i, day in enumerate(daily["time"]):
+        d = datetime.strptime(day, "%Y-%m-%d").date()
+        season = 1.0 if d.month in RAINY_MONTHS else 0.5
+
+        # Antecedent Precipitation Index — identical to derive_soil_moisture.py
+        soil = float(np.clip(0.85 * soil + rain[i] / 100, 0, 1))
+
+        flood_risk = float(np.clip(
+            static["flood_risk_base"] + 0.3 * (rain[i] / rain_max) + 0.2 * soil, 0, 1
+        ))
+        standing_water = float(np.clip(
+            (rain[i] / 20) * soil * (1 - static["elevation"] / 3000), 0, 10
+        ))
+
+        features.append({
+            "id":                 f"{district}-{day}",
+            "site_name":          f"{district} District",
+            "region":             district,
+            "district":           district,
+            "date":               day,
+            "latitude":           info["latitude"],
+            "longitude":          info["longitude"],
+            "rainfall_mm":        rain[i],
+            "temperature_c":      temp[i],
+            "ndvi":               float(np.clip(season * 0.65, 0, 1)),
+            "humidity_pct":       float(np.clip(hum[i], 0, 100)),
+            "soil_moisture":      soil,
+            "river_buffer_m":     float(static["river_buffer_m"]),
+            "depression_index":   float(static["depression_index"]),
+            "flood_risk_index":   flood_risk,
+            "standing_water_km2": standing_water,
+            "sunshine_hours":     float(np.clip(sun_s[i] / 3600, 0, 12)),
+            "population_density": float(static["population_density"]),
+            "season_weight":      season,
+        })
+    return features
 
 
 class FeatureExtractor:
+    """Fetches live weather and builds per-district feature series."""
 
-    def __init__(self):
-        self.grid_resolution_m = 500
+    async def fetch_series(self) -> Dict[str, List[dict]]:
+        """{district: [feature dict per day, from PAST_DAYS ago to FORECAST_DAYS ahead]}"""
+        logger.info("Fetching live weather for 30 districts (Open-Meteo)")
+        weather = await asyncio.to_thread(_fetch_weather_sync, DISTRICTS)
+        return {name: build_daily_features(name, daily) for name, daily in weather.items()}
 
-    async def extract(self, region: str) -> List[Dict]:
-        """
-        Main extraction pipeline.
-        In production: fetches real satellite tiles and weather data.
-        In demo: generates realistic synthetic features.
-        """
-        logger.info(f"Extracting features for region: {region}")
+    async def extract(self, region: str = "Rwanda") -> List[dict]:
+        """Today's feature vector for each district (or for one district)."""
+        series = await self.fetch_series()
+        canonical = canonical_district(region)
+        names = [canonical] if canonical else list(series.keys())
 
-        try:
-            # ✅ All 12 extractions called before the loop that uses them
-            rainfall         = await self._get_rainfall(region)
-            temperature      = await self._get_land_surface_temperature(region)
-            ndvi             = await self._get_ndvi(region)
-            humidity         = await self._get_humidity(region)
-            soil_moisture    = await self._get_soil_moisture(region)
-            river_buffers    = await self._get_river_buffers(region)
-            depression_index = await self._get_depression_index(region)
-            flood_risk       = await self._get_flood_risk(region)
-            standing_water   = await self._get_standing_water(region)
-            sunshine         = await self._get_sunshine_hours(region)
-            pop_density      = await self._get_population_density(region)
-            season_weight    = self._get_season_weight()   # not async
-
-            grid_cells = await self._get_grid_cells(region)
-            features = []
-
-            for i, cell in enumerate(grid_cells):
-                features.append({
-                    "id":                 cell["id"],
-                    "site_name":          cell.get("name", f"Cell-{i+1}"),
-                    "region":             region,
-                    "latitude":           cell["latitude"],
-                    "longitude":          cell["longitude"],
-                    "rainfall_mm":        float(rainfall[i % len(rainfall)]),
-                    "temperature_c":      float(temperature[i % len(temperature)]),
-                    "ndvi":               float(ndvi[i % len(ndvi)]),
-                    "humidity_pct":       float(humidity[i % len(humidity)]),
-                    "soil_moisture":      float(soil_moisture[i % len(soil_moisture)]),
-                    "river_buffer_m":     float(river_buffers[i % len(river_buffers)]),
-                    "depression_index":   float(depression_index[i % len(depression_index)]),
-                    "flood_risk_index":   float(flood_risk[i % len(flood_risk)]),
-                    "standing_water_km2": float(standing_water[i % len(standing_water)]),
-                    "sunshine_hours":     float(sunshine[i % len(sunshine)]),
-                    "population_density": float(pop_density[i % len(pop_density)]),
-                    "season_weight":      season_weight,
-                })
-
-            logger.info(f"Extracted {len(features)} grid cells for {region}")
-            return features
-
-        except Exception as e:
-            logger.error(f"Feature extraction failed: {e}")
-            return self._generate_demo_features(region)
-
-    # ── Original 7 extraction methods ─────────────────────────────────────────
-
-    async def _get_rainfall(self, region: str) -> np.ndarray:
-        """7-day accumulated rainfall from CHIRPS or OpenWeatherMap."""
-        return np.random.gamma(shape=2, scale=15, size=200)  # mm
-
-    async def _get_land_surface_temperature(self, region: str) -> np.ndarray:
-        """LST from Landsat-8 thermal band (Band 10), converted to Celsius."""
-        return np.random.normal(loc=28, scale=3, size=200)
-
-    async def _get_ndvi(self, region: str) -> np.ndarray:
-        """NDVI from Sentinel-2: (B8 - B4) / (B8 + B4). Range: -1 to 1."""
-        return np.clip(np.random.normal(loc=0.55, scale=0.15, size=200), -1, 1)
-
-    async def _get_humidity(self, region: str) -> np.ndarray:
-        """Relative humidity % from ERA5 reanalysis or weather stations."""
-        return np.clip(np.random.normal(loc=78, scale=10, size=200), 0, 100)
-
-    async def _get_soil_moisture(self, region: str) -> np.ndarray:
-        """Volumetric soil water content from Sentinel-1 SAR backscatter."""
-        return np.clip(np.random.beta(a=2, b=3, size=200), 0, 1)
-
-    async def _get_river_buffers(self, region: str) -> np.ndarray:
-        """Distance to nearest river/water body in meters (from DEM + OSM)."""
-        return np.random.exponential(scale=300, size=200)
-
-    async def _get_depression_index(self, region: str) -> np.ndarray:
-        """Topographic Wetness Index from SRTM 30m DEM. Higher = more ponding."""
-        return np.clip(np.random.beta(a=1.5, b=2.5, size=200), 0, 1)
-
-    # ── 5 new extraction methods ───────────────────────────────────────────────
-
-    async def _get_flood_risk(self, region: str) -> np.ndarray:
-        """Flood risk index 0–1 based on rainfall + soil saturation + elevation."""
-        return np.clip(np.random.beta(1.5, 4, size=200), 0, 1)
-
-    async def _get_standing_water(self, region: str) -> np.ndarray:
-        """Standing water area in km² detected from Sentinel-2 optical imagery."""
-        return np.random.gamma(shape=1.2, scale=0.5, size=200)
-
-    async def _get_sunshine_hours(self, region: str) -> np.ndarray:
-        """Daily sunshine hours from Open-Meteo or Meteo Rwanda."""
-        return np.clip(np.random.normal(6.5, 2.0, size=200), 0, 12)
-
-    async def _get_population_density(self, region: str) -> np.ndarray:
-        """People per km² from NISR Rwanda census data.
-        Rwanda avg ~500/km², up to ~5000 in Kigali."""
-        return np.random.lognormal(mean=6.0, sigma=0.8, size=200)
-
-    def _get_season_weight(self) -> float:
-        """
-        Returns 1.0 during rainy seasons, 0.5 during dry season.
-        Rwanda rainy seasons: MAM (Mar–May) and OND (Oct–Dec).
-        """
-        month = datetime.utcnow().month
-        rainy_months = {3, 4, 5, 10, 11, 12}
-        return 1.0 if month in rainy_months else 0.5
-
-    # ── Grid cell loader ───────────────────────────────────────────────────────
-
-    async def _get_grid_cells(self, region: str) -> List[Dict]:
-        """
-        Get 500m grid cells covering the region from the database.
-        Falls back to a synthetic Kigali grid if DB is empty or unavailable.
-        """
-        try:
-            from database.session import AsyncSessionLocal
-            from database.models import GridCell
-            from sqlalchemy import select
-
-            async with AsyncSessionLocal() as db:
-                # ✅ Correct async SQLAlchemy syntax (NOT db.query())
-                result = await db.execute(
-                    select(GridCell).where(GridCell.region == region)
-                )
-                cells = result.scalars().all()
-                if cells:
-                    return [
-                        {
-                            "id":        str(c.id),
-                            "name":      c.cell_code,
-                            "latitude":  c.latitude,
-                            "longitude": c.longitude,
-                        }
-                        for c in cells
-                    ]
-        except Exception as e:
-            logger.warning(f"DB grid cell fetch failed, using demo grid: {e}")
-
-        # Demo fallback: 15×14 = 210 cells over Kigali bounds
-        cells = []
-        lat_start, lon_start = -1.98, 30.01
-        for i in range(15):
-            for j in range(14):
-                cells.append({
-                    "id":        str(uuid.uuid4()),
-                    "name":      f"KGL-{i:02d}{j:02d}",
-                    "latitude":  lat_start + i * 0.005,
-                    "longitude": lon_start + j * 0.005,
-                })
-        return cells
-
-    # ── Demo fallback ──────────────────────────────────────────────────────────
-
-    def _generate_demo_features(self, region: str) -> List[Dict]:
-        """
-        Fallback demo features if the full extraction pipeline fails.
-        Covers all 12 feature columns so predictor never receives missing keys.
-        """
-        np.random.seed(42)
-        month = datetime.utcnow().month
-        season_weight = 1.0 if month in {3, 4, 5, 10, 11, 12} else 0.5
-        features = []
-
-        for i in range(145):
-            features.append({
-                "id":                 str(uuid.uuid4()),
-                "site_name":          f"Site-{i+1}",
-                "region":             region,
-                "latitude":           -1.98  + np.random.uniform(-0.05, 0.05),
-                "longitude":          30.06  + np.random.uniform(-0.05, 0.05),
-                # Original 7
-                "rainfall_mm":        float(np.random.gamma(2, 15)),
-                "temperature_c":      float(np.random.normal(28, 3)),
-                "ndvi":               float(np.clip(np.random.normal(0.55, 0.15), 0, 1)),
-                "humidity_pct":       float(np.clip(np.random.normal(78, 10), 0, 100)),
-                "soil_moisture":      float(np.random.beta(2, 3)),
-                "river_buffer_m":     float(np.random.exponential(300)),
-                "depression_index":   float(np.random.beta(1.5, 2.5)),
-                # 5 new
-                "flood_risk_index":   float(np.clip(np.random.beta(1.5, 4), 0, 1)),
-                "standing_water_km2": float(np.random.gamma(1.2, 0.5)),
-                "sunshine_hours":     float(np.clip(np.random.normal(6.5, 2.0), 0, 12)),
-                "population_density": float(np.random.lognormal(6.0, 0.8)),
-                "season_weight":      season_weight,
-            })
-
-        return features
+        today = kigali_today().isoformat()
+        out = []
+        for name in names:
+            day = next((f for f in series[name] if f["date"] == today), None)
+            if day:
+                out.append(day)
+        return out
