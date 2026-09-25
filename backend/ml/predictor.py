@@ -19,6 +19,10 @@ from api.config import get_settings
 settings = get_settings()
 
 
+class ModelNotAvailable(RuntimeError):
+    """Raised when a prediction is requested but no trained model is on disk."""
+
+
 class RiskPredictor:
     """
     Wraps the trained XGBoost model.
@@ -61,7 +65,7 @@ class RiskPredictor:
         self._load_model()
 
     def _load_model(self):
-        """Load model and scaler from disk. Falls back to demo model if not found."""
+        """Load the trained model and scaler from disk (train with scripts/train_local.py)."""
         model_path  = Path(settings.MODEL_PATH)
         scaler_path = Path(settings.SCALER_PATH)
 
@@ -75,56 +79,20 @@ class RiskPredictor:
             )
             logger.info(f"Loaded model from {model_path} — version {self.model_version}")
         else:
-            logger.warning("Model files not found — loading demo model")
-            self._load_demo_model()
+            logger.error(
+                f"Trained model not found at {model_path} / {scaler_path}. "
+                "Run `python -m scripts.train_local` to train it."
+            )
 
-    def _load_demo_model(self):
-        """
-        Create a demo XGBoost model with realistic coefficients.
-        Used when no trained model file exists yet (first run).
-        """
-        import xgboost as xgb
-        from sklearn.preprocessing import StandardScaler
+    @property
+    def ready(self) -> bool:
+        return self.model is not None and self.scaler is not None
 
-        self.scaler = StandardScaler()
-
-        np.random.seed(42)
-        n = 1000
-        X = np.random.randn(n, len(self.FEATURE_COLUMNS))
-
-        score = (
-            0.30 * X[:, 0]
-            + 0.15 * X[:, 1]
-            + 0.12 * X[:, 2]
-            + 0.10 * X[:, 3]
-            + 0.08 * X[:, 4]
-            - 0.06 * X[:, 5]
-            + 0.05 * X[:, 6]
-            + 0.07 * X[:, 7]
-            + 0.05 * X[:, 8]
-            + 0.01 * X[:, 9]
-            + 0.01 * X[:, 10]
-            + 0.00 * X[:, 11]
-        )
-        y = np.where(score > 1.2, 3,
-            np.where(score > 0.5, 2,
-            np.where(score > 0.0, 1, 0)))
-
-        X_scaled = self.scaler.fit_transform(X)
-
-        self.model = xgb.XGBClassifier(
-            n_estimators=100,
-            max_depth=4,
-            learning_rate=0.1,
-            num_class=4,
-            objective="multi:softprob",
-            eval_metric="mlogloss",
-            random_state=42,
-            n_jobs=-1,
-        )
-        self.model.fit(X_scaled, y)
-        self.model_version = "demo-v1.0"
-        logger.info("Demo XGBoost model initialized with 12 features, 4 risk levels")
+    def _require_model(self):
+        if not self.ready:
+            raise ModelNotAvailable(
+                "The risk model is not trained yet. Run `python -m scripts.train_local` in the backend."
+            )
 
     def classify_risk(self, probability: float) -> RiskLevel:
         """Map a probability score to a risk level."""
@@ -136,9 +104,8 @@ class RiskPredictor:
             return RiskLevel.MODERATE
         return RiskLevel.LOW
 
-    def predict_feature_vector(self, feature: dict) -> dict:
-        """Predict risk for one ML-ready feature dictionary (all 12 features)."""
-        feature_vector = np.array([[
+    def _vector(self, feature: dict) -> list:
+        return [
             feature.get("rainfall_mm",        0),
             feature.get("temperature_c",      28),
             feature.get("ndvi",               0.4),
@@ -151,20 +118,31 @@ class RiskPredictor:
             feature.get("sunshine_hours",     6.5),
             feature.get("population_density", 400),
             feature.get("season_weight",      0.5),
-        ]])
+        ]
 
-        scaled        = self.scaler.transform(feature_vector)
-        probabilities = self.model.predict_proba(scaled)[0]
+    def predict_batch(self, features: List[dict]) -> List[dict]:
+        """Predict risk for many ML-ready feature dictionaries in one model call."""
+        self._require_model()
+        if not features:
+            return []
+        scaled = self.scaler.transform(np.array([self._vector(f) for f in features], dtype=float))
+        probs  = self.model.predict_proba(scaled)
 
-        high_risk_prob = float(probabilities[2]) + float(probabilities[3])
-        risk_level     = self.classify_risk(high_risk_prob)
+        out = []
+        for feature, p in zip(features, probs):
+            high_risk_prob = float(p[2]) + float(p[3])
+            out.append({
+                "risk_score":    round(high_risk_prob, 4),
+                "risk_level":    self.classify_risk(high_risk_prob).value,
+                "confidence":    round(float(np.max(p)), 4),
+                "model_version": self.model_version,
+                "features":      feature,
+            })
+        return out
 
-        return {
-            "risk_score":    round(high_risk_prob, 4),
-            "risk_level":    risk_level.value,
-            "model_version": self.model_version or "demo-v1.0",
-            "features":      feature,
-        }
+    def predict_feature_vector(self, feature: dict) -> dict:
+        """Predict risk for one ML-ready feature dictionary (all 12 features)."""
+        return self.predict_batch([feature])[0]
 
     def predict_risk(self, weather: dict, ndvi: float = 0.4, river_distance: float = 500) -> dict:
         """Compatibility helper for live weather + NDVI + river-distance predictions."""
@@ -233,15 +211,15 @@ class RiskPredictor:
             logger.info(f"Extracting features for {region}")
             features = await self.extractor.extract(region=region)
 
+        predictions = self.predict_batch(features)
         results = []
-        for cell in features:
-            prediction = self.predict_feature_vector(cell)
+        for cell, prediction in zip(features, predictions):
             risk_level  = RiskLevel(prediction["risk_level"])
 
             results.append(RiskZoneResult(
                 grid_cell_id=cell.get("id", ""),
                 site_name=cell.get("site_name", ""),
-                region=region,
+                region=cell.get("region", region),
                 latitude=cell.get("latitude", 0),
                 longitude=cell.get("longitude", 0),
                 risk_score=prediction["risk_score"],
@@ -267,6 +245,8 @@ class RiskPredictor:
             low_risk_count=len(low_zones),
             high_risk_zones=high_zones + critical_zones,
             all_zones=results,
-            model_version=self.model_version or "demo-v1.0",
-            confidence_score=0.89,
+            model_version=self.model_version,
+            confidence_score=round(
+                sum(p["confidence"] for p in predictions) / len(predictions), 4
+            ) if predictions else 0.0,
         )
