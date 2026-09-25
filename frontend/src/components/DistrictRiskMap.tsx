@@ -1,4 +1,6 @@
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
+import { useQuery } from '@tanstack/react-query';
+import * as riskZonesService from '../services/riskZonesService';
 
 const RISK_COLORS = {
   low: '#4CAF50',
@@ -14,50 +16,61 @@ function colorFor(risk: number) {
   return RISK_COLORS.low;
 }
 
-const districts = [
-  { name: 'Nyagatare', lat: -1.2925, lon: 30.3253, risk: 91 },
-  { name: 'Kayonza', lat: -1.8825, lon: 30.6438, risk: 88 },
-  { name: 'Bugesera', lat: -2.2367, lon: 30.2483, risk: 82 },
-  { name: 'Gasabo', lat: -1.9441, lon: 30.1119, risk: 82 },
-  { name: 'Musanze', lat: -1.4998, lon: 29.6344, risk: 78 },
-  { name: 'Gicumbi', lat: -1.6939, lon: 30.0692, risk: 75 },
-  { name: 'Nyamasheke', lat: -2.3583, lon: 29.1167, risk: 68 },
-  { name: 'Rubavu', lat: -1.6939, lon: 29.2569, risk: 64 },
-  { name: 'Kicukiro', lat: -1.9706, lon: 30.1044, risk: 45 },
-  { name: 'Nyarugenge', lat: -1.9536, lon: 30.0606, risk: 31 },
-  { name: 'Huye', lat: -2.5967, lon: 29.7392, risk: 22 },
-];
-
 interface DistrictRiskMapProps {
   showHazardLayers?: boolean;
 }
 
 export default function DistrictRiskMap({ showHazardLayers = true }: DistrictRiskMapProps) {
+  const { data, isError } = useQuery({
+    queryKey: ['risk-heatmap'],
+    queryFn: () => riskZonesService.getRiskHeatmap(),
+    refetchInterval: 10 * 60 * 1000,
+  });
+
+  const districts = (data?.features ?? []).map((f) => ({
+    name: f.properties.region,
+    lat: f.geometry.coordinates[1],
+    lon: f.geometry.coordinates[0],
+    risk: Math.round(f.properties.risk_score * 100),
+    level: f.properties.risk_level,
+    rainfall: f.properties.rainfall_mm,
+    temperature: f.properties.temperature_c,
+  }));
+
   return (
-    <MapContainer
-      center={[-1.9403, 29.8739]}
-      zoom={8}
-      scrollWheelZoom={false}
-      style={{ width: '100%', height: '100%', minHeight: '400px', borderRadius: 'var(--radius-md)' }}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      {showHazardLayers && districts.map((d) => (
-        <CircleMarker
-          key={d.name}
-          center={[d.lat, d.lon]}
-          radius={8 + d.risk / 12}
-          pathOptions={{ color: 'white', weight: 2, fillColor: colorFor(d.risk), fillOpacity: 0.85 }}
-        >
-          <Popup>
-            <strong>{d.name}</strong>
-            <br />
-            Risk Score: {d.risk}/100
-          </Popup>
-        </CircleMarker>
-      ))}
-    </MapContainer>
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <MapContainer
+        center={[-1.9403, 29.8739]}
+        zoom={8}
+        scrollWheelZoom={false}
+        style={{ width: '100%', height: '100%', minHeight: '400px', borderRadius: 'var(--radius-md)' }}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        {showHazardLayers && districts.map((d) => (
+          <CircleMarker
+            key={d.name}
+            center={[d.lat, d.lon]}
+            radius={8 + d.risk / 12}
+            pathOptions={{ color: 'white', weight: 2, fillColor: colorFor(d.risk), fillOpacity: 0.85 }}
+          >
+            <Popup>
+              <strong>{d.name}</strong>
+              <br />
+              Risk Score: {d.risk}/100 ({d.level})
+              {d.rainfall != null && <><br />Rainfall: {d.rainfall.toFixed(1)} mm</>}
+              {d.temperature != null && <><br />Temperature: {d.temperature.toFixed(1)}°C</>}
+            </Popup>
+          </CircleMarker>
+        ))}
+      </MapContainer>
+      {isError && (
+        <div style={{ position: 'absolute', bottom: 8, left: 8, zIndex: 400, background: 'white', padding: '4px 8px', borderRadius: 6, fontSize: '0.75rem', color: 'var(--color-risk-critical)' }}>
+          Could not load live risk data.
+        </div>
+      )}
+    </div>
   );
 }
