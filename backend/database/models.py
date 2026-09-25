@@ -27,6 +27,7 @@ class User(Base):
     hashed_password = Column(String(300), nullable=False)
     role            = Column(String(50), default="field_worker")
     phone           = Column(String(20))
+    district        = Column(String(200), nullable=True)   # home district for district officers / community workers
     is_active       = Column(Boolean, default=True)
     created_at      = Column(DateTime, default=datetime.utcnow)
 
@@ -220,3 +221,37 @@ class GridCell(Base):
     risk_score          = Column(Float)
     latest_features     = Column(JSON)
     updated_at          = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class SmsSubscriber(Base):
+    """A phone number subscribed (via the public portal) to SMS risk alerts for a district."""
+    __tablename__ = "sms_subscribers"
+    id         = Column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    phone      = Column(String(20), nullable=False, index=True)
+    district   = Column(String(200), nullable=False, index=True)
+    name       = Column(String(200), nullable=True)
+    is_active  = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class SmsLog(Base):
+    """One row per SMS the platform attempted to send (delivery audit trail)."""
+    __tablename__ = "sms_log"
+    id         = Column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    phone      = Column(String(20))
+    district   = Column(String(200), nullable=True)
+    message    = Column(Text)
+    status     = Column(String(20))          # delivered | failed | skipped
+    detail     = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
+class ContactMessage(Base):
+    """Messages submitted through the public Contact form."""
+    __tablename__ = "contact_messages"
+    id         = Column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    name       = Column(String(200), nullable=False)
+    email      = Column(String(200), nullable=False)
+    organization = Column(String(200), nullable=True)
+    subject    = Column(String(200), nullable=True)
+    message    = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
