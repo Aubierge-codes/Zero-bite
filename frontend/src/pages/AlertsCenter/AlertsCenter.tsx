@@ -1,35 +1,24 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Search, Filter, Save, Send, MonitorSmartphone, Smartphone, MessageSquare, Bot,
-  AlertTriangle, Construction, Loader2, CheckCircle2,
+  Loader2, CheckCircle2,
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import styles from './AlertsCenter.module.css';
 import * as alertsService from '../../services/alertsService';
-import type { AlertItem, AlertTemplate } from '../../services/alertsService';
+import type { AlertTemplate } from '../../services/alertsService';
+import * as predictionsService from '../../services/predictionsService';
 
 const composeTabs = [
   { label: 'Compose Message', icon: MessageSquare },
   { label: 'Templates', icon: MonitorSmartphone },
-  { label: 'Fallback Rules', icon: AlertTriangle },
 ];
 
 const statusFilters = ['All', 'active', 'acknowledged', 'resolved'] as const;
 type StatusFilter = (typeof statusFilters)[number];
 
 type Channel = 'sms' | 'dashboard';
-
-const demoAlerts: AlertItem[] = [
-  {
-    id: 'demo-1',
-    risk_level: 'HIGH',
-    region: 'Musanze District',
-    site_name: 'Musanze Sector',
-    trigger_reason: 'Malaria Risk Spike Detected',
-    status: 'active',
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-  },
-];
 
 function formatDate(iso: string) {
   try {
@@ -92,12 +81,13 @@ export default function AlertsCenter() {
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const [message, setMessage] = useState(
-    'Attention: High rainfall predicted for Musanze over next 3 days. Community Health Workers are advised to increase mosquito net distribution and clear stagnant water sites.'
-  );
-  const [riskLevel] = useState('HIGH');
+  const [searchParams] = useSearchParams();
+  const initialDistrict = searchParams.get('district');
+
+  const [message, setMessage] = useState('');
+  const [riskLevel, setRiskLevel] = useState('HIGH');
   const [targetAudience, setTargetAudience] = useState('community_workers');
-  const [geographicScope, setGeographicScope] = useState<string[]>(['Musanze']);
+  const [geographicScope, setGeographicScope] = useState<string[]>(initialDistrict ? [initialDistrict] : []);
   const [useDashboard, setUseDashboard] = useState(true);
   const [useSms, setUseSms] = useState(false);
   const [composeError, setComposeError] = useState<string | null>(null);
@@ -106,8 +96,32 @@ export default function AlertsCenter() {
   const { data: alerts, isLoading: alertsLoading } = useQuery({
     queryKey: ['alerts', { hours: 720 }],
     queryFn: () => alertsService.listAlerts({ hours: 720 }),
-    select: (d) => (d && d.length > 0 ? d : demoAlerts),
   });
+
+  const { data: districtList } = useQuery({
+    queryKey: ['districts-list'],
+    queryFn: () => predictionsService.listAllDistricts(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const districtNames = useMemo(() => (districtList ?? []).map((d) => d.district).sort(), [districtList]);
+
+  // Draft the message from the district's live risk (real numbers, editable before sending).
+  const draftFromLiveData = async (district: string) => {
+    try {
+      const r = await predictionsService.getPublicDistrictRisk(district);
+      setRiskLevel(r.risk_level);
+      setMessage(
+        `Zero Bite alert: ${r.risk_level} malaria risk in ${r.district} (${r.risk_score}/100). ` +
+          `${r.weather_note} Community Health Workers: continue net distribution and clear stagnant water sites.`
+      );
+    } catch (e) {
+      setComposeError(e instanceof Error ? e.message : 'Could not load live risk for that district.');
+    }
+  };
+
+  useEffect(() => {
+    if (initialDistrict) draftFromLiveData(initialDistrict);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { data: templates, isLoading: templatesLoading } = useQuery({
     queryKey: ['alert-templates'],
@@ -119,9 +133,15 @@ export default function AlertsCenter() {
       alertsService.composeAlert(payload),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ['alerts'] });
-      setComposeSuccess(res.message || 'Alert composed and sent successfully.');
+      const sms = res.results;
+      const smsNote = res.channels.includes('sms')
+        ? sms.sms_sent > 0
+          ? ` SMS delivered to ${sms.sms_sent} of ${sms.sms_recipients} subscribers.`
+          : ` SMS not sent: ${sms.sms_errors[0] ?? 'no subscribers'}`
+        : '';
+      setComposeSuccess(`${res.message}.${smsNote}`);
       setComposeError(null);
-      setTimeout(() => setComposeSuccess(null), 4000);
+      setTimeout(() => setComposeSuccess(null), 8000);
     },
     onError: (err: any) => {
       setComposeError(err?.detail || err?.message || 'Failed to send alert.');
@@ -140,8 +160,7 @@ export default function AlertsCenter() {
   });
 
   const visibleAlerts = useMemo(() => {
-    if (!alerts) return demoAlerts;
-    return alerts.filter((a) => {
+    return (alerts ?? []).filter((a) => {
       const matchesStatus =
         statusFilter === 'All' ||
         (a.status || '').toLowerCase() === statusFilter.toLowerCase();
@@ -154,10 +173,6 @@ export default function AlertsCenter() {
       return matchesStatus && matchesQuery;
     });
   }, [alerts, statusFilter, query]);
-
-  if (alerts && alerts.length > 0 && !selectedId) {
-    setSelectedId(alerts[0].id);
-  }
 
   const selected = visibleAlerts.find((a) => a.id === selectedId) || visibleAlerts[0];
 
@@ -447,34 +462,7 @@ export default function AlertsCenter() {
             ))}
           </div>
 
-          {activeTab === 'Fallback Rules' ? (
-            <div
-              className="card"
-              style={{ textAlign: 'center', padding: 'var(--spacing-2xl)' }}
-            >
-              <div
-                style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '50%',
-                  backgroundColor: '#F3F4F6',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto var(--spacing-md)',
-                  color: 'var(--color-text-secondary)',
-                }}
-              >
-                <Construction size={22} />
-              </div>
-              <h3 style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>
-                {activeTab} is coming soon
-              </h3>
-              <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
-                This panel isn&apos;t built yet. Switch back to Compose Message to draft an alert.
-              </p>
-            </div>
-          ) : activeTab === 'Templates' ? (
+          {activeTab === 'Templates' ? (
             <div className="grid grid-cols-2 gap-md">
               {(templatesLoading ? [] : templates || []).map((tpl) => (
                 <div
@@ -662,7 +650,11 @@ export default function AlertsCenter() {
                       </label>
                       <select
                         value={geographicScope[0] || ''}
-                        onChange={(e) => setGeographicScope(e.target.value ? [e.target.value] : [])}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setGeographicScope(v ? [v] : []);
+                          if (v && !message.trim()) draftFromLiveData(v);
+                        }}
                         style={{
                           width: '100%',
                           padding: 'var(--spacing-sm)',
@@ -672,16 +664,7 @@ export default function AlertsCenter() {
                         }}
                       >
                         <option value="">Select district</option>
-                        {[
-                          'Kigali',
-                          'Musanze',
-                          'Kayonza',
-                          'Rubavu',
-                          'Bugesera',
-                          'Gicumbi',
-                          'Huye',
-                          'Rusizi',
-                        ].map((d) => (
+                        {districtNames.map((d) => (
                           <option key={d} value={d}>
                             {d}
                           </option>
