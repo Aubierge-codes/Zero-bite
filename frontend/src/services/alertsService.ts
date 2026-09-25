@@ -43,6 +43,8 @@ export interface ComposeAlertResponse {
   results: {
     dashboard: boolean;
     sms: boolean;
+    sms_recipients: number;
+    sms_sent: number;
     sms_errors: string[];
   };
 }
@@ -50,6 +52,7 @@ export interface ComposeAlertResponse {
 export interface SmsSubscribeRequest {
   phone_number: string;
   district: string;
+  name?: string;
 }
 
 export function listAlerts(params?: {
@@ -74,7 +77,19 @@ export function subscribeSms(payload: SmsSubscribeRequest) {
     message: string;
     district: string;
     phone: string;
+    confirmation_sms_sent: boolean;
   }>('/alerts/subscribe-sms', payload);
+}
+
+export function broadcastCommunitySms(payload: { message: string; district: string; zone_id?: string }) {
+  return http.post<{ message: string; district: string; recipients: number; sent: number }>(
+    '/alerts/broadcast-sms',
+    payload
+  );
+}
+
+export function getSubscriberCount(district?: string) {
+  return http.get<{ district: string | null; count: number }>('/alerts/subscribers/count', { district });
 }
 
 export function getAlertTemplates() {
@@ -98,14 +113,5 @@ export function resolveAlert(
   return http.post<{ message: string; alert_id: string }>(
     `/alerts/${alert_id}/resolve`,
     payload || {}
-  );
-}
-
-export function sendTestSms(phone: string, message?: string) {
-  const params: Record<string, string> = { phone };
-  if (message) params.message = message;
-  return http.post<{ message: string; provider_response: any }>(
-    `/alerts/test-sms`,
-    params
   );
 }
