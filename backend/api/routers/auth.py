@@ -4,9 +4,9 @@ JWT login, OTP via SMS, and role-based access for all 4 dashboards.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 from typing import Optional
@@ -16,10 +16,12 @@ from jose import jwt
 from passlib.context import CryptContext
 
 from database.session import get_db
-from database.models import User
+from database.models import User, ActivityLog
+from api.dependencies import require_admin
 from api.config import get_settings
 from api.dependencies import get_current_user
 from alerts.notification_service import send_sms
+from data_pipeline.rwanda_districts import canonical_district
 
 router    = APIRouter()
 settings  = get_settings()
@@ -113,6 +115,7 @@ async def login(
             "email":    user.email,
             "role":     user.role,
             "phone":    user.phone,
+            "district": user.district,
         },
     }
 
@@ -175,7 +178,7 @@ async def verify_otp(payload: OtpVerify, db: AsyncSession = Depends(get_db)):
             full_name       = f"User {payload.phone_number[-4:]}",
             email           = f"{payload.phone_number}@zerobite.local",
             hashed_password = pwd_context.hash("otp-login"),
-            role            = stored["role"],
+            role            = "community_worker",   # never trust a client-supplied role for self-created accounts
             phone           = payload.phone_number,
             is_active       = True,
         )
@@ -199,15 +202,35 @@ async def verify_otp(payload: OtpVerify, db: AsyncSession = Depends(get_db)):
             "name":  user.full_name,
             "phone": user.phone,
             "role":  user.role,
+            "district": user.district,
         },
     }
 
 
 # ── Register ───────────────────────────────────────────────────────────────────
 
+_optional_bearer = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
+
+
 @router.post("/register")
-async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db)):
-    """Admin-created accounts for district officers and ministry users."""
+async def register(
+    payload: RegisterRequest,
+    db: AsyncSession = Depends(get_db),
+    token: Optional[str] = Depends(_optional_bearer),
+):
+    """
+    Admin-created accounts for district officers and ministry users.
+    Only an admin/health official may create accounts; the very first account
+    (empty user table) can be created without a token to bootstrap the system.
+    """
+    existing_users = (await db.execute(select(func.count()).select_from(User))).scalar_one()
+    if existing_users > 0:
+        if not token:
+            raise HTTPException(status_code=401, detail="Sign in as an administrator to create accounts")
+        caller = await get_current_user(token=token, db=db)
+        if caller.role not in ("admin", "health_official"):
+            raise HTTPException(status_code=403, detail="Admin or health official role required")
+
     result = await db.execute(select(User).where(User.email == payload.email))
     if result.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -218,9 +241,12 @@ async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db))
         hashed_password = pwd_context.hash(payload.password),
         role            = payload.role,
         phone           = payload.phone,
+        district        = canonical_district(payload.district) if payload.district else None,
         is_active       = True,
     )
     db.add(user)
+    db.add(ActivityLog(event_type="user_registered",
+                       description=f"Account created for {payload.name} ({payload.role})"))
     await db.commit()
     return {
         "message":      "User registered successfully",
@@ -247,4 +273,34 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
         "email": current_user.email,
         "role":  current_user.role,
         "phone": current_user.phone,
+        "district": current_user.district,
     }
+
+
+# ── Admin: user management ─────────────────────────────────────────────────────
+
+@router.get("/users")
+async def list_users(db: AsyncSession = Depends(get_db), admin: User = Depends(require_admin)):
+    users = (await db.execute(select(User).order_by(User.created_at.desc()))).scalars().all()
+    return [{"id": str(u.id), "name": u.full_name, "email": u.email, "role": u.role,
+             "district": u.district, "phone": u.phone, "is_active": u.is_active,
+             "created_at": u.created_at} for u in users]
+
+
+class ActiveToggle(BaseModel):
+    is_active: bool
+
+
+@router.patch("/users/{user_id}/active")
+async def set_user_active(user_id: str, payload: ActiveToggle,
+                          db: AsyncSession = Depends(get_db), admin: User = Depends(require_admin)):
+    user = await db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if str(user.id) == str(admin.id) and not payload.is_active:
+        raise HTTPException(status_code=400, detail="You cannot deactivate your own account")
+    user.is_active = payload.is_active
+    db.add(ActivityLog(event_type="user_status",
+                       description=f"{admin.email} {'activated' if payload.is_active else 'deactivated'} {user.email}"))
+    await db.commit()
+    return {"id": str(user.id), "is_active": user.is_active}
