@@ -1,13 +1,15 @@
 import { useNavigate } from 'react-router-dom';
-import { Database, Users, Share2, Zap, Satellite, Brain, HeartPulse, MapPin } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Database, Users, Share2, Zap, Satellite, Brain, Clock, MapPin } from 'lucide-react';
+import { getPublicModelMetrics } from '../../services/contactService';
 import styles from './About.module.css';
 import CountUp from '../../components/CountUp';
 
-const byTheNumbers = [
-  { icon: <MapPin size={20} />, value: 30, suffix: '', label: 'Districts Monitored' },
-  { icon: <HeartPulse size={20} />, value: 1.2, suffix: 'M', decimals: 1, label: 'People Protected' },
-  { icon: <Satellite size={20} />, value: 15, suffix: 'yrs', label: 'Historical Data' },
-  { icon: <Brain size={20} />, value: 94, suffix: '%', label: 'Prediction Accuracy' },
+const byTheNumbers = (accuracyPct?: number) => [
+  { icon: <MapPin size={20} />, value: 30, suffix: '', decimals: 0, label: 'Districts Monitored' },
+  { icon: <Clock size={20} />, value: 1, suffix: 'h', decimals: 0, label: 'Data Refresh Interval' },
+  { icon: <Satellite size={20} />, value: 16, suffix: ' days', decimals: 0, label: 'Forecast Horizon' },
+  ...(accuracyPct !== undefined ? [{ icon: <Brain size={20} />, value: accuracyPct, suffix: '%', decimals: 1, label: 'Measured Model Accuracy' }] : []),
 ];
 
 const values = [
@@ -34,6 +36,13 @@ const values = [
 ];
 
 export default function About() {
+  const { data: metrics } = useQuery({
+    queryKey: ['public-model-metrics'],
+    queryFn: getPublicModelMetrics,
+    staleTime: 60 * 60 * 1000,
+    retry: false,
+  });
+  const stats = byTheNumbers(metrics ? Math.round(metrics.accuracy * 1000) / 10 : undefined);
   const navigate = useNavigate();
 
   return (
@@ -62,8 +71,8 @@ export default function About() {
               <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Our Mission</h2>
               <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.0625rem', lineHeight: 1.7, marginBottom: '1rem' }}>
                 Malaria transmission in Rwanda is closely tied to rainfall, humidity, and temperature — conditions that are
-                shifting as the climate changes. Zero Bite combines Sentinel-2 satellite imagery, Meteo Rwanda weather
-                feeds, and historical outbreak records into a single AI model that forecasts breeding risk 30 days ahead.
+                shifting as the climate changes. Zero Bite combines live Open-Meteo weather and forecasts, terrain and census
+                statistics, and ten years of historical weather records into a single model that estimates breeding risk up to 16 days ahead.
               </p>
               <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.0625rem', lineHeight: 1.7 }}>
                 That forecast becomes an alert routed straight to the district officers and Community Health Workers
@@ -76,11 +85,11 @@ export default function About() {
                 Zero Bite by the Numbers
               </h3>
               <div className="grid grid-cols-2 gap-lg">
-                {byTheNumbers.map((stat) => (
+                {stats.map((stat) => (
                   <div key={stat.label} className={styles.statBlock}>
                     <div style={{ color: 'var(--color-text-secondary)', marginBottom: '0.5rem', display: 'flex', justifyContent: 'center' }}>{stat.icon}</div>
                     <div className={styles.statValue}>
-                      <CountUp value={stat.value} suffix={stat.suffix} decimals={stat.decimals ?? 0} />
+                      <CountUp value={stat.value} suffix={stat.suffix} decimals={stat.decimals} />
                     </div>
                     <div className={styles.statLabel}>{stat.label}</div>
                   </div>
