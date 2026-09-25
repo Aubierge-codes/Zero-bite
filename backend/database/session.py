@@ -29,6 +29,12 @@ AsyncSessionLocal = async_sessionmaker(
 async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # create_all never alters existing tables: add columns introduced after a
+        # dev database was first created.
+        if db_url.startswith("sqlite"):
+            cols = {row[1] for row in (await conn.exec_driver_sql("PRAGMA table_info(users)")).fetchall()}
+            if "district" not in cols:
+                await conn.exec_driver_sql("ALTER TABLE users ADD COLUMN district VARCHAR(200)")
 
 
 async def get_db():
