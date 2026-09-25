@@ -16,9 +16,11 @@ export interface DistrictPriorityItem {
 
 export interface NationalSummary {
   high_risk_districts: number;
+  critical_districts: number;
   active_warnings: number;
   avg_national_risk: number;
-  population_at_risk: number;
+  avg_risk_change_pts: number | null;
+  rising_districts: number;
   district_heatmap: DistrictHeatmapItem[];
   district_priority_ranking: DistrictPriorityItem[];
 }
@@ -33,36 +35,40 @@ export interface AiSituationSummary {
 
 export interface RiskTrendPoint {
   week: string;
-  historical: number;
-  predicted: number;
+  historical: number | null;
+  predicted: number | null;
 }
 
 export interface RiskTrendsResponse {
   trends: RiskTrendPoint[];
 }
 
+export interface DistrictForecastPoint {
+  date: string;
+  risk_score: number;
+  rainfall_mm: number;
+  humidity_pct: number;
+  temperature_c: number;
+  is_forecast: boolean;
+}
+
 export interface DistrictDashboard {
   district: string;
+  province: string;
   risk_score: number;
   risk_level: string;
-  risk_change_pct: number;
+  risk_change_pts: number;
   temperature_c: number;
   humidity_pct: number;
-  active_hotspots: number;
-  sector_heatmap: Array<{
-    sector: string;
-    risk_score: number;
-    risk_level: string;
-    lat: number;
-    lon: number;
-  }>;
-  forecast_30day: Array<{
-    date: string;
-    humidity_index: number;
-    temperature_factor: number;
-    satellite_pooling: number;
-  }>;
+  rainfall_mm: number;
+  soil_moisture: number;
+  standing_water_index: number;
+  flood_risk_index: number;
+  confidence: number;
+  high_risk_days_ahead: number;
+  forecast_30day: DistrictForecastPoint[];
   recommended_actions: string[];
+  model_version: string;
   last_updated: string;
 }
 
@@ -71,16 +77,16 @@ export interface DistrictListItem {
   province: string;
   current_risk: number;
   risk_level: string;
-  high_cells?: number;
-  total_cells?: number;
   trend_7day: string;
 }
 
 export interface ZonePrediction {
   zone_id: string;
   site_name?: string;
+  district: string;
   village_risk: number;
   risk_level: string;
+  risk_change_pts: number;
   rainfall_mm?: number;
   humidity_pct?: number;
   temperature_c?: number;
@@ -99,6 +105,9 @@ export interface PublicDistrictRisk {
     temperature_c: number;
     humidity_pct: number;
   };
+  rainfall_mm: number;
+  summary: string;
+  weather_note: string;
   recommended_prevention: Array<{
     action: string;
     priority: string;
@@ -157,6 +166,7 @@ export function runPrediction(region: string = 'Rwanda') {
     total_cells: number;
     model_version: string;
     confidence: number;
+    new_alerts: number;
     top_high_risk: Array<{
       site: string;
       score: number;
