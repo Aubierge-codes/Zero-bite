@@ -4,6 +4,7 @@ export interface DashboardStats {
   timestamp: string;
   risk_zones: {
     total: number;
+    critical: number;
     high: number;
     moderate: number;
     low: number;
@@ -17,7 +18,7 @@ export interface DashboardStats {
     total_teams: number;
     deployed_teams: number;
     sites_treated_7d: number;
-    larvicide_saved_pct: number;
+    larvicide_saved_pct: number | null;
   };
   prediction: {
     last_run: string | null;
