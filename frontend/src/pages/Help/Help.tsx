@@ -5,7 +5,7 @@ import { ChevronDown, LifeBuoy } from 'lucide-react';
 const faqs = [
   {
     question: "How accurate are Zero Bite's predictions?",
-    answer: 'Our models are trained on 15 years of historical Rwandan epidemiological data and validated against satellite imagery from the European Space Agency, achieving 94% prediction accuracy at the district level.',
+    answer: "The model is trained on more than ten years of daily NASA POWER weather records for Rwanda's districts and evaluated on a held-out 20% test set; its measured accuracy is shown on the About page and in Settings. It estimates weather-driven breeding risk, not confirmed case counts.",
   },
   {
     question: 'How do I subscribe to SMS risk alerts?',
@@ -17,7 +17,7 @@ const faqs = [
   },
   {
     question: 'What do the risk levels mean?',
-    answer: 'Low (0-25): minimal breeding conditions observed. Elevated (26-50): conditions favorable for mosquito activity. High (51-75): high probability of malaria transmission. Critical (76-100): immediate preventive action required.',
+    answer: "Scores run from 0 to 100 and are grouped into Low, Moderate, High and Critical. Low means minimal breeding conditions, Moderate means conditions favour mosquito activity, High means a high probability of transmission, and Critical means immediate preventive action is required. The exact cut-offs are listed in the Risk Band Guide on the Public Portal.",
   },
   {
     question: 'Is my personal data safe?',
