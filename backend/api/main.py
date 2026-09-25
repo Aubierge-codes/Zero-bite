@@ -19,11 +19,34 @@ from api.routers import (
     model_management,
     auth,
     dashboard,
+    contact,
+    reports,
 )
-from database.session import init_db
+import asyncio
+
+from database.session import init_db, AsyncSessionLocal
 from api.config import get_settings
+from ml.feature_extractor import WeatherUnavailable
+from ml.predictor import ModelNotAvailable
+from ml.refresh import refresh_predictions
 
 settings = get_settings()
+
+
+REFRESH_INTERVAL_SECONDS = 60 * 60
+
+
+async def _prediction_loop():
+    """Warm the predictions at startup, then refresh from live weather every hour."""
+    while True:
+        try:
+            async with AsyncSessionLocal() as db:
+                await refresh_predictions(db)
+        except (ModelNotAvailable, WeatherUnavailable) as exc:
+            logger.warning(f"Prediction refresh skipped: {exc}")
+        except Exception:
+            logger.exception("Prediction refresh failed")
+        await asyncio.sleep(REFRESH_INTERVAL_SECONDS)
 
 
 @asynccontextmanager
@@ -31,7 +54,9 @@ async def lifespan(app: FastAPI):
     logger.info("Zero_Bite API starting up...")
     await init_db()
     logger.info("Database initialized")
+    task = asyncio.create_task(_prediction_loop())
     yield
+    task.cancel()
     logger.info("Zero_Bite API shutting down...")
 
 
@@ -62,7 +87,19 @@ app.include_router(alerts.router,           prefix="/api/v1/alerts",      tags=[
 app.include_router(risk_zones.router,       prefix="/api/v1/risk-zones",  tags=["Risk Zones"])
 app.include_router(field_teams.router,      prefix="/api/v1/field-teams", tags=["Field Teams"])
 app.include_router(data_ingestion.router,   prefix="/api/v1/data",        tags=["Data Ingestion"])
+app.include_router(contact.router,          prefix="/api/v1/contact",     tags=["Contact"])
+app.include_router(reports.router,          prefix="/api/v1/reports",     tags=["Reports"])
 app.include_router(model_management.router, prefix="/api/v1/model",       tags=["Model Management"])
+
+
+@app.exception_handler(WeatherUnavailable)
+async def weather_unavailable_handler(request: Request, exc: WeatherUnavailable):
+    return JSONResponse(status_code=503, content={"detail": f"Live weather data is unavailable right now: {exc}"})
+
+
+@app.exception_handler(ModelNotAvailable)
+async def model_unavailable_handler(request: Request, exc: ModelNotAvailable):
+    return JSONResponse(status_code=503, content={"detail": str(exc)})
 
 
 @app.exception_handler(Exception)
