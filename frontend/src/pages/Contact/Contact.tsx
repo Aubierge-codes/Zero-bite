@@ -1,6 +1,7 @@
 import { useState, type FormEvent, type ChangeEvent } from 'react';
 import { Mail, Phone, MapPin, Clock, Send, Users, Newspaper, LifeBuoy, Handshake, CheckCircle2, Loader2 } from 'lucide-react';
 import styles from './Contact.module.css';
+import { submitContact } from '../../services/contactService';
 
 const channels = [
   { icon: <Users size={20} />, title: 'General Inquiries', email: 'hello@zerobite.rw' },
@@ -9,12 +10,13 @@ const channels = [
   { icon: <LifeBuoy size={20} />, title: 'Technical Support', email: 'support@zerobite.rw' },
 ];
 
-type FormStatus = 'idle' | 'submitting' | 'success';
+type FormStatus = 'idle' | 'submitting' | 'success' | 'error';
 
 export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', org: '', subject: '', message: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<FormStatus>('idle');
+  const [submitError, setSubmitError] = useState('');
 
   const updateField = (field: keyof typeof form) => (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -30,7 +32,19 @@ export default function Contact() {
     if (Object.keys(nextErrors).length > 0) return;
 
     setStatus('submitting');
-    setTimeout(() => setStatus('success'), 1100);
+    setSubmitError('');
+    submitContact({
+      name: form.name.trim(),
+      email: form.email.trim(),
+      organization: form.org.trim() || undefined,
+      subject: form.subject || undefined,
+      message: form.message.trim(),
+    })
+      .then(() => setStatus('success'))
+      .catch((err: unknown) => {
+        setSubmitError(err instanceof Error ? err.message : 'Could not send your message. Please try again.');
+        setStatus('error');
+      });
   };
 
   const resetForm = () => {
@@ -101,6 +115,7 @@ export default function Contact() {
                 <textarea id="contact-message" rows={5} placeholder="Tell us a bit about what you need..." value={form.message} onChange={updateField('message')} style={errors.message ? { borderColor: 'var(--color-risk-critical)' } : undefined} />
                 {errors.message && <span className={styles.fieldError}>{errors.message}</span>}
               </div>
+              {status === 'error' && <p style={{ color: 'var(--color-risk-critical)', fontSize: '0.875rem', marginBottom: 'var(--spacing-sm)' }}>{submitError}</p>}
               <button type="submit" className="btn-primary" disabled={status === 'submitting'} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: status === 'submitting' ? 0.7 : 1 }}>
                 {status === 'submitting' ? (
                   <><Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} /> Sending...</>
