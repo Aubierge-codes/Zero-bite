@@ -5,12 +5,14 @@ from typing import Optional
 
 from database.session import get_db
 from database.models import RiskZone
+from ml.refresh import ensure_fresh
 
 router = APIRouter()
 
 
 @router.get("/heatmap")
 async def get_heatmap(region: Optional[str] = None, db: AsyncSession = Depends(get_db)):
+    await ensure_fresh(db)
     stmt = select(RiskZone)
     if region:
         stmt = stmt.where(RiskZone.region == region)
@@ -33,6 +35,7 @@ async def get_heatmap(region: Optional[str] = None, db: AsyncSession = Depends(g
         "type": "FeatureCollection", "features": features,
         "metadata": {
             "total_sites": len(features),
+            "critical_risk": sum(1 for f in features if f["properties"]["risk_level"] == "CRITICAL"),
             "high_risk": sum(1 for f in features if f["properties"]["risk_level"] == "HIGH"),
             "moderate_risk": sum(1 for f in features if f["properties"]["risk_level"] == "MODERATE"),
             "low_risk": sum(1 for f in features if f["properties"]["risk_level"] == "LOW"),
@@ -47,6 +50,7 @@ async def list_risk_zones(
     limit: int = 100,
     db: AsyncSession = Depends(get_db),
 ):
+    await ensure_fresh(db)
     stmt = select(RiskZone)
     if risk_level:
         stmt = stmt.where(RiskZone.risk_level == risk_level.upper())
