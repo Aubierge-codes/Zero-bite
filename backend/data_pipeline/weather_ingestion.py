@@ -66,13 +66,8 @@ class WeatherIngestionPipeline:
     async def _fetch_station(self, client: httpx.AsyncClient, station: dict) -> dict:
         """Fetch current weather from OpenWeatherMap API."""
         if not settings.OPENWEATHER_API_KEY:
-            # Return synthetic data in demo mode
-            import random
-            return {
-                "rainfall_mm": random.uniform(0, 60),
-                "temperature_c": random.uniform(18, 32),
-                "humidity_pct": random.uniform(60, 95),
-            }
+            logger.warning("OPENWEATHER_API_KEY not configured — station ingestion skipped (live weather is served by Open-Meteo)")
+            return None
         try:
             resp = await client.get(
                 "https://api.openweathermap.org/data/2.5/weather",
