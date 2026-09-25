@@ -26,7 +26,7 @@
 }
 
 .heroTitle {
-  font-family: Didot, serif;
+  font-family: var(--font-family-heading);
   font-size: 3.875rem;
   line-height: 1.04;
   font-weight: 800;
