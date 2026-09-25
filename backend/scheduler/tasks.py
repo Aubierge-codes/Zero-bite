@@ -41,32 +41,15 @@ def run_weather_ingestion(self):
 def run_daily_predictions(self):
     """Scheduled: run AI risk predictions twice daily."""
     try:
-        from ml.predictor import RiskPredictor
-        predictor = RiskPredictor()
-        result    = run_async(predictor.predict(
-            region="Rwanda",
-            prediction_date=__import__("datetime").datetime.utcnow(),
-        ))
+        from database.session import AsyncSessionLocal
+        from ml.refresh import refresh_predictions
 
-        logger.info(
-            f"Prediction complete — "
-            f"CRITICAL={result.critical_risk_count} "
-            f"HIGH={result.high_risk_count} "
-            f"MODERATE={result.moderate_risk_count} "
-            f"LOW={result.low_risk_count}"
-        )
+        async def _run():
+            async with AsyncSessionLocal() as db:
+                return await refresh_predictions(db, force_weather=True)
 
-        # Generate alerts for HIGH + CRITICAL zones
-        from alerts.alert_engine import AlertEngine
-        engine = AlertEngine()
-        run_async(engine.process_prediction_results("scheduled", result.high_risk_zones))
-
-        _log_activity(
-            "prediction_run",
-            f"Daily prediction: CRITICAL={result.critical_risk_count} "
-            f"HIGH={result.high_risk_count} MODERATE={result.moderate_risk_count}",
-        )
-
+        summary = run_async(_run())
+        logger.info(f"Prediction complete — {summary['counts']}, {summary['new_alerts']} new alerts")
     except Exception as e:
         logger.error(f"Prediction task failed: {e}")
         raise self.retry(exc=e)
