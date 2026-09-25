@@ -83,6 +83,26 @@ For PostgreSQL, switch to:
 DATABASE_URL=postgresql+asyncpg://zerobite:password@localhost:5432/zerobite_db
 ```
 
+## Real Data Pipeline
+
+Every number the dashboards show comes from real sources - nothing is randomly generated:
+
+- **Live weather** (rain, temperature, humidity, sunshine, 16-day forecast) for all 30 districts from Open-Meteo (no API key).
+- **Static terrain/census features** from `scripts/build_static_features.py`.
+- **Trained XGBoost model** (`models/`) scores every district; results are stored in `risk_zones`, `zone_history`, `alerts`, `predictions` and refreshed on API startup and then every hour.
+- NDVI has no free keyless feed, so a seasonal proxy (identical to the one used in training) is used for that one feature.
+
+First run on an existing database:
+
+```bash
+python -m scripts.purge_demo_data     # removes old fabricated rows (safe to re-run)
+python -m scripts.seed_db             # creates the demo login accounts (admin@zerobite.rw / admin123)
+python -m scripts.evaluate_model      # writes models/metrics.json (measured accuracy shown in the UI)
+uvicorn api.main:app --reload
+```
+
+SMS is sent through Africa's Talking only when `AFRICASTALKING_API_KEY` is set; otherwise messages are logged as "skipped" (Settings > SMS Gateway).
+
 ## Core Components
 
 ### 1. AI Prediction Engine (`ml/`)
