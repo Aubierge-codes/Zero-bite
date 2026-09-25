@@ -5,6 +5,9 @@ import styles from './MainDashboardLayout.module.css';
 import FloatingChatBubble from '../components/FloatingChatBubble';
 import { useAuthStore, roleToDashboardPath } from '../stores/authStore';
 import * as authService from '../services/authService';
+import * as dashboardService from '../services/dashboardService';
+import { useQuery } from '@tanstack/react-query';
+import { timeAgo } from '../lib/format';
 
 export default function MainDashboardLayout() {
   const navigate = useNavigate();
@@ -13,6 +16,12 @@ export default function MainDashboardLayout() {
   const user = useAuthStore((s) => s.user);
   const logoutStore = useAuthStore((s) => s.logout);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { data: stats } = useQuery({
+    queryKey: ['dashboard-stats'],
+    queryFn: () => dashboardService.getDashboardStats(),
+    enabled: !!token,
+    refetchInterval: 5 * 60 * 1000,
+  });
   const hasEmbeddedAssistant = location.pathname.startsWith('/district') || location.pathname.startsWith('/worker');
 
   if (!token) {
@@ -44,7 +53,7 @@ export default function MainDashboardLayout() {
     navigate('/login', { replace: true });
   };
 
-  const profileName = user?.name || 'U. Ndayisaba';
+  const profileName = user?.name || 'Guest';
   const profileRole = user?.role
     ? {
         ministry: 'Ministry',
@@ -56,7 +65,7 @@ export default function MainDashboardLayout() {
         worker: 'Worker',
         chw: 'CHW',
       }[user.role] || user.role
-    : 'Ministry';
+    : 'Not signed in';
 
   return (
     <div className={styles.layout}>
@@ -90,7 +99,7 @@ export default function MainDashboardLayout() {
             <span className={styles.aiStatusIcon}><ShieldCheck size={20} /></span>
             <div>
               <div className={styles.aiStatusTitle}>AI Status</div>
-              <div className={styles.aiStatusDetail}>Models updated 12m ago. Satellite feed active.</div>
+              <div className={styles.aiStatusDetail}>{stats?.prediction.last_run ? `Predictions updated ${timeAgo(stats.prediction.last_run)}. Live weather feed active.` : 'Waiting for the first prediction run…'}</div>
             </div>
           </div>
           <div className={styles.logout} onClick={handleLogout}>
