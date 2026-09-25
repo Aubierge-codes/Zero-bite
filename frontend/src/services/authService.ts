@@ -5,6 +5,7 @@ export interface User {
   name: string;
   email?: string;
   phone?: string;
+  district?: string | null;
   role: string;
 }
 
