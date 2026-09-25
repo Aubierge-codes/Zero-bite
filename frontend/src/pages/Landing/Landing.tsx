@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import styles from './Landing.module.css';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import {
   Satellite, Brain, Smartphone, CheckCircle2, Bot, ArrowUp, Landmark, Building2,
@@ -13,12 +13,13 @@ import Reveal from '../../components/Reveal';
 import CountUp from '../../components/CountUp';
 import * as predictionsService from '../../services/predictionsService';
 import * as alertsService from '../../services/alertsService';
+import * as contactService from '../../services/contactService';
 
 const assistantChecklist = [
-  'Ask about specific district forecasts',
-  'Get recommendations for community health risks',
-  'Draft SMS alerts in Kinyarwanda or English',
-  'Understand the data behind risk scores',
+  "Ask about any district's current risk",
+  "See today's highest-risk districts",
+  'Get prevention advice based on current conditions',
+  'Understand the rainfall and humidity behind each score',
 ];
 
 const preventionTips = [
@@ -28,17 +29,11 @@ const preventionTips = [
   { icon: <Clock size={16} />, title: 'Peak Exposure', description: 'Avoid being outdoors during dusk and dawn peak biting hours.' },
 ];
 
-const trustStats = [
-  { value: 94, suffix: '%', label: 'Prediction Accuracy' },
-  { value: 12, suffix: 'm', label: 'Data Latency' },
-  { value: 30, suffix: '+', label: 'Districts Monitored' },
-];
-
-const partners = [
-  { icon: <Satellite size={22} />, name: 'European Space Agency' },
-  { icon: <Landmark size={22} />, name: 'Ministry of Health' },
-  { icon: <GraduationCap size={22} />, name: 'University of Rwanda' },
-  { icon: <RadioTower size={22} />, name: 'SMS Delivery Network' },
+const dataSources = [
+  { icon: <Satellite size={22} />, name: 'Open-Meteo (live weather & forecast)' },
+  { icon: <GraduationCap size={22} />, name: 'NASA POWER (10+ years of training data)' },
+  { icon: <Landmark size={22} />, name: 'NISR census & terrain statistics' },
+  { icon: <RadioTower size={22} />, name: "Africa's Talking (SMS delivery)" },
 ];
 
 const roles = [
@@ -72,14 +67,6 @@ const roles = [
   },
 ];
 
-const FALLBACK_DISTRICTS = [
-  'Bugesera', 'Gatsibo', 'Kayonza', 'Kirehe', 'Nyagatare', 'Rwamagana',
-  'Huye', 'Gisagara', 'Kamonyi', 'Muhanga', 'Nyamagabe', 'Nyamasheke',
-  'Nyanza', 'Ruhango', 'Nyaruguru', 'Gakenke', 'Gicumbi', 'Burera',
-  'Musanze', 'Ngororero', 'Nyabihu', 'Rubavu', 'Rulindo', 'Karongi',
-  'Nyarugenge', 'Gasabo', 'Kicukiro', 'Rusizi', 'Ngoma', 'Rutsiro',
-];
-
 export default function Landing() {
   const navigate = useNavigate();
   const [heroQuery, setHeroQuery] = useState('');
@@ -95,22 +82,37 @@ export default function Landing() {
     navigate(`/public${params}`);
   };
 
-  const { data: districts = [], isLoading: districtsLoading } = useQuery({
-    queryKey: ['all-districts'],
-    queryFn: async () => {
-      try {
-        const list = await predictionsService.listAllDistricts();
-        if (list && list.length) return list.map((d) => d.district);
-        return FALLBACK_DISTRICTS;
-      } catch {
-        return FALLBACK_DISTRICTS;
-      }
-    },
+  const { data: districtList = [], isLoading: districtsLoading } = useQuery({
+    queryKey: ['districts-list'],
+    queryFn: () => predictionsService.listAllDistricts(),
+    staleTime: 1000 * 60 * 5,
+  });
+  const districts = districtList.map((d) => d.district).sort((x, y) => x.localeCompare(y));
+  const topDistrict = districtList[0];
+  const highRiskCount = districtList.filter((d) => d.risk_level === 'HIGH' || d.risk_level === 'CRITICAL').length;
+
+  const { data: metrics } = useQuery({
+    queryKey: ['public-model-metrics'],
+    queryFn: () => contactService.getPublicModelMetrics(),
     staleTime: 1000 * 60 * 60,
+    retry: false,
   });
 
+  const { data: topRisk } = useQuery({
+    queryKey: ['public-district', topDistrict?.district],
+    queryFn: () => predictionsService.getPublicDistrictRisk(topDistrict!.district),
+    enabled: !!topDistrict,
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const trustStats = [
+    ...(metrics ? [{ value: Math.round(metrics.accuracy * 1000) / 10, suffix: '%', label: 'Measured Model Accuracy' }] : []),
+    { value: districtList.length || 30, suffix: '', label: 'Districts Monitored' },
+    { value: 16, suffix: ' days', label: 'Weather Forecast Horizon' },
+  ];
+
   const subscribeMut = useMutation({
-    mutationFn: (payload: { phone_number: string; district: string }) => alertsService.subscribeSms(payload),
+    mutationFn: (payload: { phone_number: string; district: string; name?: string }) => alertsService.subscribeSms(payload),
     onSuccess: (data) => {
       setSubSuccess(`You are now subscribed! ${data.phone || subPhone} will receive alerts for ${data.district || subDistrict}.`);
       setSubError(null);
@@ -137,10 +139,10 @@ export default function Landing() {
       setSubError('Please select a district.');
       return;
     }
-    subscribeMut.mutate({ phone_number: phone, district });
+    subscribeMut.mutate({ phone_number: phone, district, name: subName.trim() || undefined });
   };
 
-  const districtOptions = Array.isArray(districts) && districts.length ? districts : FALLBACK_DISTRICTS;
+  const districtOptions = districts;
 
   return (
     <div>
@@ -163,16 +165,14 @@ export default function Landing() {
               />
               <button onClick={checkRisk}>Check Risk</button>
             </div>
-            <div className={styles.trustRow}>
-              <div className={styles.avatarStack}>
-                <span>DH</span>
-                <span>MK</span>
-                <span>+</span>
+            {districtList.length > 0 && (
+              <div className={styles.trustRow}>
+                <p>
+                  Live today: <strong>{highRiskCount} of {districtList.length} districts</strong> at high or critical risk
+                  {topDistrict ? <> — highest is <strong>{topDistrict.district}</strong> ({topDistrict.current_risk}/100)</> : null}.
+                </p>
               </div>
-              <p>
-                Trusted by <strong>30+ District Health Officers</strong> across Rwanda.
-              </p>
-            </div>
+            )}
           </div>
 
           <div className={styles.mapPlaceholder}>
@@ -199,7 +199,7 @@ export default function Landing() {
                 <div className={styles.featureIcon}><Satellite size={32} /></div>
                 <h3>Data Ingestion</h3>
                 <p style={{ color: 'var(--color-text-secondary)', marginTop: '0.5rem' }}>
-                  We pull real-time satellite imagery and Meteo Rwanda weather feeds.
+                  We pull live weather and 16-day forecasts for every district from Open-Meteo.
                 </p>
               </div>
             </Reveal>
@@ -208,7 +208,7 @@ export default function Landing() {
                 <div className={styles.featureIcon}><Brain size={32} /></div>
                 <h3>AI Prediction</h3>
                 <p style={{ color: 'var(--color-text-secondary)', marginTop: '0.5rem' }}>
-                  Our models process 12+ indicators to predict malaria breeding risk 30 days ahead.
+                  Our model scores 12 climate and terrain indicators to estimate malaria breeding risk up to 16 days ahead.
                 </p>
               </div>
             </Reveal>
@@ -233,7 +233,7 @@ export default function Landing() {
               
               <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Your 24/7 Climate Intelligence Partner</h2>
               <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.125rem', lineHeight: 1.6 }}>
-                The Zero Bite AI Assistant understands the complex relationships between rainfall, temperature, and vector breeding. Get instant insights in your language.
+                The Zero Bite assistant answers questions from live weather and the risk model: how rainfall, temperature and humidity translate into malaria breeding risk for your district.
               </p>
               <ul className={styles.checklist}>
                 {assistantChecklist.map((item) => (
@@ -251,15 +251,21 @@ export default function Landing() {
                   <div>
                     <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>Zero Bite AI Assistant</div>
                     <div className={styles.chatStatus}>
-                      <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: 'var(--color-risk-low)' }} /> Active • Kinyarwanda
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: 'var(--color-risk-low)' }} /> Active • Live data
                     </div>
                   </div>
                 </div>
                 <div className={styles.chatBody}>
                   <div className={styles.chatBubbleUser}>Mwaramutse! How can you help with today's malaria risk assessment?</div>
-                  <div className={styles.chatSuggestion}>Why is the risk high in Kayonza today?</div>
+                  <div className={styles.chatSuggestion}>{topDistrict ? `What is the risk in ${topDistrict.district} today?` : 'What is the risk in my district today?'}</div>
                   <div className={styles.chatBubbleAi}>
-                    Risk in <strong>Kayonza</strong> is currently at <strong>78/100</strong> (+15% today). This is driven by a 75% humidity spike combined with stagnant water detected via satellite imagery. Mosquitoes are highly active following recent rainfall in Nyanza village.
+                    {topRisk ? (
+                      <>
+                        Risk in <strong>{topRisk.district}</strong> is currently <strong>{topRisk.risk_score}/100</strong> ({topRisk.risk_level.toLowerCase()}). {topRisk.summary} {topRisk.weather_note}
+                      </>
+                    ) : (
+                      'Loading live risk data…'
+                    )}
                   </div>
                 </div>
                 <div className={styles.chatInputRow}>
@@ -325,7 +331,7 @@ export default function Landing() {
             <div>
               <h2 className={styles.subscribeTitle}>Subscribe to Local Alerts</h2>
               <p className={styles.subscribeSubtitle}>
-                Receive real-time SMS alerts in English or Kinyarwanda when risk levels in your district increase.
+                Receive SMS alerts when malaria risk in your district rises to high or critical.
               </p>
               {subSuccess && (
                 <div style={{ padding: '0.875rem 1rem', backgroundColor: '#ECFDF5', color: '#065F46', borderRadius: 12, marginBottom: '1.25rem', fontSize: '0.9375rem', border: '1px solid #A7F3D0' }}>
@@ -398,7 +404,7 @@ export default function Landing() {
           <Reveal>
             <h2 className={styles.sectionTitle}>Trust Through Science</h2>
             <p className={styles.sectionSubtitle}>
-              Our models are trained on 15 years of historical Rwandan epidemiological data and validated against high-resolution satellite imagery from the European Space Agency.
+              The risk model is trained on more than ten years of daily NASA POWER weather records for Rwanda's districts, and runs every hour on live Open-Meteo weather and forecasts.
             </p>
           </Reveal>
 
@@ -416,10 +422,10 @@ export default function Landing() {
           </Reveal>
 
           <p style={{ textAlign: 'center', fontSize: '0.8125rem', color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 'var(--spacing-lg)' }}>
-            Our Research &amp; Delivery Partners
+            Our Data Sources
           </p>
           <div className="flex justify-center gap-xl" style={{ flexWrap: 'wrap', marginBottom: 'var(--spacing-2xl)' }}>
-            {partners.map((partner) => (
+            {dataSources.map((partner) => (
               <div key={partner.name} title={partner.name} style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#F0F4F8', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-secondary)' }}>
                 {partner.icon}
               </div>
@@ -429,12 +435,12 @@ export default function Landing() {
           <Reveal>
           <div className="card flex justify-between items-center" style={{ backgroundColor: 'var(--color-primary)', color: 'white', border: 'none', flexWrap: 'wrap', gap: 'var(--spacing-lg)' }}>
             <div>
-              <h3 style={{ fontSize: '1.25rem', marginBottom: '0.25rem' }}>2023 National Climate-Health Report</h3>
-              <p style={{ fontSize: '0.9375rem', color: '#D1D5DB' }}>Download the comprehensive analysis on how AI is transforming outbreak prevention in Rwanda.</p>
+              <h3 style={{ fontSize: '1.25rem', marginBottom: '0.25rem' }}>Build a Climate-Health Report</h3>
+              <p style={{ fontSize: '0.9375rem', color: '#D1D5DB' }}>Generate a report from the latest model output for any date range and set of districts, then print or export it.</p>
             </div>
-            <button style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: 'var(--spacing-sm) var(--spacing-lg)', borderRadius: 'var(--radius-md)', backgroundColor: 'white', color: 'var(--color-primary)', fontWeight: 600, flexShrink: 0 }}>
-              <Download size={16} /> Download PDF (14.2 MB)
-            </button>
+            <Link to="/reports" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: 'var(--spacing-sm) var(--spacing-lg)', borderRadius: 'var(--radius-md)', backgroundColor: 'white', color: 'var(--color-primary)', fontWeight: 600, flexShrink: 0 }}>
+              <Download size={16} /> Open Report Builder
+            </Link>
           </div>
           </Reveal>
         </div>
