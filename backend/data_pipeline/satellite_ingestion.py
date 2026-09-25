@@ -6,6 +6,9 @@ Extracts NDVI, LST, and soil moisture per 500m grid cell.
 
 from datetime import datetime, timedelta
 from loguru import logger
+from api.config import get_settings
+
+settings = get_settings()
 
 
 class SatelliteIngestionPipeline:
@@ -75,7 +78,9 @@ class SatelliteIngestionPipeline:
         # products = api.query(area_wkt, date=('NOW-7DAYS', 'NOW'), platformname='Sentinel-2',
         #                      cloudcoverpercentage=(0, 30))
         # api.download_all(products)
-        return "/data/sentinel2/latest_tile.zip"
+        if not (settings.COPERNICUS_USERNAME and settings.COPERNICUS_PASSWORD):
+            raise RuntimeError("COPERNICUS_USERNAME / COPERNICUS_PASSWORD are not configured — satellite ingestion skipped.")
+        raise NotImplementedError("Sentinel-2 download is not implemented yet.")
 
     async def _calculate_ndvi(self, tile_path: str):
         """
@@ -85,7 +90,7 @@ class SatelliteIngestionPipeline:
         import numpy as np
         logger.info("Calculating NDVI from Sentinel-2 bands B4/B8")
         # Production: rasterio.open(b4_path), rasterio.open(b8_path) → compute NDVI raster
-        return np.clip(np.random.normal(0.55, 0.15, (200, 200)), -1, 1)
+        raise NotImplementedError("Sentinel-2 NDVI processing is not configured (needs Copernicus credentials + rasterio).")
 
     async def _calculate_lst(self, region: str):
         """
@@ -94,7 +99,7 @@ class SatelliteIngestionPipeline:
         """
         import numpy as np
         logger.info("Calculating Land Surface Temperature from Landsat-8")
-        return np.random.normal(28, 3, (200, 200))
+        raise NotImplementedError("Landsat-8 LST processing is not configured.")
 
     async def _get_soil_moisture_sar(self, region: str):
         """
@@ -103,7 +108,7 @@ class SatelliteIngestionPipeline:
         """
         import numpy as np
         logger.info("Estimating soil moisture from Sentinel-1 SAR")
-        return np.clip(np.random.beta(2, 3, (200, 200)), 0, 1)
+        raise NotImplementedError("Sentinel-1 soil-moisture processing is not configured.")
 
     async def _store_features(self, region, ndvi_grid, lst_grid, soil_grid) -> int:
         """Persist extracted features to database."""
