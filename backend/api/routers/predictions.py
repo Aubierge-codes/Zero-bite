@@ -1,303 +1,246 @@
 """
 Predictions Router
-Serves all AI risk prediction data to the four Zero Bite dashboards.
+Serves real AI risk predictions to the four Zero Bite dashboards.
+
+All numbers come from the trained model run over live Open-Meteo weather for
+Rwanda's 30 districts (see ml/risk_engine.py). Nothing here is hardcoded or
+randomly generated; if a district has no data the API says so (404/503).
 """
 
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, delete as sql_delete
-from typing import Optional
+import asyncio
 from datetime import datetime, timedelta
 
-from database.session import get_db
-from database.models import Prediction, RiskZone, ZoneHistory
-from ml.predictor import RiskPredictor
-from data_pipeline.open_meteo_service import get_weather
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-RWANDA_DISTRICTS = [
-    "Bugesera", "Gatsibo", "Kayonza", "Kirehe", "Nyagatare", "Rwamagana",
-    "Huye", "Gisagara", "Kamonyi", "Muhanga", "Nyamagabe", "Nyamasheke",
-    "Nyanza", "Ruhango", "Nyaruguru", "Gakenke", "Gicumbi", "Burera", "Musanze",
-    "Ngororero", "Nyabihu", "Rubavu", "Rulindo", "Karongi", "Nyarugenge",
-    "Gasabo", "Kicukiro", "Rusizi", "Ngoma", "Rutsiro",
-]
+from data_pipeline.open_meteo_service import get_weather
+from data_pipeline.rwanda_districts import DISTRICT_INFO, canonical_district
+from database.models import Alert, Prediction, RiskZone
+from database.session import get_db
+from ml.refresh import ensure_fresh, refresh_predictions
+from ml.runtime import engine, predictor
 
 router = APIRouter()
-predictor = RiskPredictor()
+
+
+def _pct(score: float) -> int:
+    return round(score * 100)
+
+
+def _iso_utc(dt) -> str:
+    return (dt or datetime.utcnow()).isoformat() + "Z"
+
+
+def _district_or_404(name: str) -> str:
+    district = canonical_district(name)
+    if not district:
+        raise HTTPException(status_code=404, detail=f"Unknown district '{name}'")
+    return district
 
 
 # ── Core prediction runner ─────────────────────────────────────────────────────
 
 @router.post("/predict")
 async def run_prediction(region: str = "Rwanda", db: AsyncSession = Depends(get_db)):
-    """Run a full prediction cycle for a region and persist results."""
-    result = await predictor.predict(
-        region=region,
-        prediction_date=datetime.utcnow() + timedelta(hours=24),
-    )
-    record = Prediction(
-        region=region,
-        prediction_date=result.prediction_date,
-        critical_risk_count=result.critical_risk_count,
-        high_risk_count=result.high_risk_count,
-        moderate_risk_count=result.moderate_risk_count,
-        low_risk_count=result.low_risk_count,
-        model_version=result.model_version,
-        confidence_score=result.confidence_score,
-    )
-    db.add(record)
-    await db.commit()
-
-    # ── Save all 210 zone results into RiskZone table ──────────────────────────
-    await db.execute(sql_delete(RiskZone).where(RiskZone.district.in_(RWANDA_DISTRICTS)))
-    for i, z in enumerate(result.all_zones):
-        district = RWANDA_DISTRICTS[i % len(RWANDA_DISTRICTS)]
-        db.add(RiskZone(
-            site_name=z.site_name or f"Zone-{i+1}",
-            region=district,       # aggregate_to_district groups by .region
-            district=district,
-            latitude=z.latitude,
-            longitude=z.longitude,
-            risk_level=z.risk_level.value,
-            risk_score=z.risk_score,
-            rainfall_mm=z.rainfall_mm,
-            temperature_c=z.temperature_c,
-            ndvi=z.ndvi,
-            humidity_pct=z.humidity_pct,
-        ))
-    await db.commit()
-    # ──────────────────────────────────────────────────────────────────────────
-
+    """Re-fetch live weather, run the model for all 30 districts and persist results."""
+    summary = await refresh_predictions(db, force_weather=True)
+    today = await engine.today()
+    ranked = sorted(today.values(), key=lambda d: -d["risk_score"])
     return {
-        "region": result.region,
-        "prediction_date": result.prediction_date,
-        "critical_risk": result.critical_risk_count,
-        "high_risk": result.high_risk_count,
-        "moderate_risk": result.moderate_risk_count,
-        "low_risk": result.low_risk_count,
-        "total_cells": result.total_cells,
-        "model_version": result.model_version,
-        "confidence": result.confidence_score,
+        "region":          "Rwanda",
+        "prediction_date": datetime.utcnow(),
+        "critical_risk":   summary["counts"]["CRITICAL"],
+        "high_risk":       summary["counts"]["HIGH"],
+        "moderate_risk":   summary["counts"]["MODERATE"],
+        "low_risk":        summary["counts"]["LOW"],
+        "total_cells":     summary["districts"],
+        "model_version":   summary["model_version"],
+        "confidence":      summary["confidence"],
+        "new_alerts":      summary["new_alerts"],
         "top_high_risk": [
-            {
-                "site":  z.site_name,
-                "score": z.risk_score,
-                "lat":   z.latitude,
-                "lon":   z.longitude,
-                "level": z.risk_level.value,
-            }
-            for z in result.high_risk_zones[:5]
-        ],
+            {"site": d["site_name"], "score": _pct(d["risk_score"]),
+             "lat": d["latitude"], "lon": d["longitude"], "level": d["risk_level"]}
+            for d in ranked if d["risk_level"] in ("HIGH", "CRITICAL")
+        ][:5],
     }
 
 
 # ── Ministry dashboard ─────────────────────────────────────────────────────────
 
+def _hazard_type(day: dict) -> str:
+    """Dominant hazard driving the district's risk, from its real conditions."""
+    if day["flood_risk_index"] >= 0.6 or day["rainfall_mm"] >= 40:
+        return "Floods"
+    if day["temperature_c"] >= 30:
+        return "Heatwave"
+    return "Malaria"
+
+
 @router.get("/national-summary")
 async def national_summary(db: AsyncSession = Depends(get_db)):
-    """
-    Screen 2 — Ministry dashboard top cards + district heatmap.
-    Returns aggregated national risk data across all 30 Rwanda districts.
-    """
-    result = await db.execute(select(RiskZone))
-    zones   = result.scalars().all()
+    """Ministry dashboard KPI cards, district heatmap and priority ranking."""
+    await ensure_fresh(db)
+    today = await engine.today()
+    if not today:
+        raise HTTPException(status_code=503, detail="No prediction data available yet")
 
-    # District-level aggregation
-    from ml.predictor import RiskPredictor
-    district_data = predictor.aggregate_to_district(zones) if zones else {}
+    days = list(today.values())
+    avg_now = sum(d["risk_score"] for d in days) / len(days) * 100
 
-    high_risk_districts    = sum(1 for d in district_data.values() if d["risk_level"] in ("HIGH", "CRITICAL"))
-    avg_national_risk      = round(
-        sum(d["risk_score"] for d in district_data.values()) / len(district_data) * 100, 1
-    ) if district_data else 0
+    # Same average one week ago, from the model run over observed weather.
+    snap = await engine.snapshot()
+    week_ago = []
+    for series in snap.values():
+        d = engine._day(series, -7)
+        if d:
+            week_ago.append(d["risk_score"])
+    avg_before = sum(week_ago) / len(week_ago) * 100 if week_ago else None
 
-    # Active warnings = alerts created in last 24h
-    from database.models import Alert
     cutoff = datetime.utcnow() - timedelta(hours=24)
-    alert_result  = await db.execute(select(Alert).where(Alert.created_at >= cutoff))
-    active_alerts = alert_result.scalars().all()
+    active = (await db.execute(
+        select(Alert).where(Alert.created_at >= cutoff, Alert.status == "active")
+    )).scalars().all()
 
+    rising = 0
+    for name in today:
+        if await engine.trend_label(name) == "Increasing":
+            rising += 1
+
+    ranking = sorted(days, key=lambda d: -d["risk_score"])
     return {
-        "high_risk_districts": high_risk_districts,
-        "active_warnings":     len(active_alerts),
-        "avg_national_risk":   avg_national_risk,
-        "population_at_risk":  _estimate_population_at_risk(district_data),
+        "high_risk_districts": sum(1 for d in days if d["risk_level"] in ("HIGH", "CRITICAL")),
+        "critical_districts":  sum(1 for d in days if d["risk_level"] == "CRITICAL"),
+        "active_warnings":     len(active),
+        "avg_national_risk":   round(avg_now, 1),
+        "avg_risk_change_pts": round(avg_now - avg_before, 1) if avg_before is not None else None,
+        "rising_districts":    rising,
         "district_heatmap": [
-            {
-                "district":   d["district"],
-                "risk_level": d["risk_level"],
-                "risk_score": round(d["risk_score"] * 100),
-                "pct_high":   d["pct_high_risk"],
-            }
-            for d in district_data.values()
+            {"district": d["district"], "risk_level": d["risk_level"],
+             "risk_score": _pct(d["risk_score"]),
+             "pct_high": 100.0 if d["risk_level"] in ("HIGH", "CRITICAL") else 0.0}
+            for d in days
         ],
-        "district_priority_ranking": sorted(
-            [
-                {
-                    "district":   d["district"],
-                    "risk_score": round(d["risk_score"] * 100),
-                    "risk_level": d["risk_level"],
-                    "hazard_type": _infer_hazard_type(d),
-                }
-                for d in district_data.values()
-            ],
-            key=lambda x: -x["risk_score"]
-        )[:10],
+        "district_priority_ranking": [
+            {"district": d["district"], "risk_score": _pct(d["risk_score"]),
+             "risk_level": d["risk_level"], "hazard_type": _hazard_type(d)}
+            for d in ranking[:10]
+        ],
     }
 
 
 @router.get("/ai-summary")
 async def ai_situation_summary(db: AsyncSession = Depends(get_db)):
-    """
-    Screen 2 — Ministry dashboard AI Situation Summary panel.
-    Returns the plain-language AI explanation + recommended actions.
-    """
-    result = await db.execute(
-        select(RiskZone)
-        .where(RiskZone.risk_level.in_(["HIGH", "CRITICAL"]))
-        .order_by(RiskZone.risk_score.desc())
-        .limit(5)
-    )
-    top_zones = result.scalars().all()
+    """Plain-language situation summary generated from today's real model output."""
+    await ensure_fresh(db)
+    today = await engine.today()
+    if not today:
+        raise HTTPException(status_code=503, detail="No prediction data available yet")
 
-    if not top_zones:
-        return {
-            "summary": "All districts currently within normal parameters. Continue standard prevention protocols.",
-            "recommended_actions": ["Maintain bed net distribution", "Continue community health worker patrols"],
-            "model_version": predictor.model_version or "demo-v1.0",
-            "generated_at": datetime.utcnow().isoformat(),
-        }
+    ranked = sorted(today.values(), key=lambda d: -d["risk_score"])
+    high = [d for d in ranked if d["risk_level"] in ("HIGH", "CRITICAL")]
+    avg_rain = sum(d["rainfall_mm"] for d in ranked) / len(ranked)
+    avg_hum = sum(d["humidity_pct"] for d in ranked) / len(ranked)
 
-    top = top_zones[0]
-    summary = (
-        f"Increased risk detected in {top.region}. "
-        f"Current risk score is {round(top.risk_score * 100)}/100 "
-        f"({top.risk_level}), driven by elevated rainfall and humidity levels. "
-        f"Immediate intervention recommended for {len(top_zones)} high-risk zones."
-    )
+    if not high:
+        top = ranked[0]
+        summary = (
+            f"No district is currently at high risk. The highest is {top['district']} at "
+            f"{_pct(top['risk_score'])}/100 ({top['risk_level']}). National averages: "
+            f"{avg_rain:.1f} mm rainfall and {avg_hum:.0f}% humidity."
+        )
+        actions = ["Maintain bed net distribution", "Continue community health worker patrols"]
+    else:
+        top = high[0]
+        names = ", ".join(d["district"] for d in high[:3])
+        summary = (
+            f"{len(high)} district(s) at HIGH or CRITICAL risk, led by {top['district']} at "
+            f"{_pct(top['risk_score'])}/100. Driving conditions there: {top['rainfall_mm']:.1f} mm rainfall, "
+            f"{top['humidity_pct']:.0f}% humidity, {top['temperature_c']:.1f}°C. Priority districts: {names}."
+        )
+        actions = [
+            f"Deploy larvicide teams to {top['district']} — risk {_pct(top['risk_score'])}/100 ({top['risk_level']}).",
+            f"SMS alert to community health workers in {names}.",
+        ]
+        if len(high) > 3:
+            actions.append(f"Escalate to Ministry — {len(high)} districts are above the HIGH threshold.")
 
     return {
-        "summary": summary,
-        "recommended_actions": [
-            f"Deploy larvicide teams to {top.region}",
-            f"SMS alert to all Abajyanama b'ubuzima in {top.region}",
-            "Escalate to Ministry if no response within 24h",
-        ],
-        "top_zones": [
-            {"site": z.site_name, "region": z.region, "score": round(z.risk_score * 100)}
-            for z in top_zones
-        ],
-        "model_version": predictor.model_version or "demo-v1.0",
-        "generated_at": datetime.utcnow().isoformat(),
+        "summary":             summary,
+        "recommended_actions": actions,
+        "top_zones": [{"site": d["site_name"], "region": d["district"], "score": _pct(d["risk_score"])}
+                      for d in high[:5]],
+        "model_version":       predictor.model_version,
+        "generated_at":        _iso_utc(None),
     }
 
 
 @router.get("/risk-trends")
-async def risk_probability_trends(weeks: int = 6, db: AsyncSession = Depends(get_db)):
-    """
-    Screen 2 — Ministry dashboard Risk Probability Trends chart.
-    Returns historical vs predicted weekly risk scores.
-    """
-    result = await db.execute(
-        select(Prediction)
-        .order_by(Prediction.created_at.desc())
-        .limit(weeks * 7)
-    )
-    predictions = result.scalars().all()
-
-    # Group by week
-    weekly = {}
-    for p in predictions:
-        week_key = f"W{p.created_at.isocalendar()[1]}"
-        if week_key not in weekly:
-            weekly[week_key] = []
-        total = (p.high_risk_count or 0) + (p.moderate_risk_count or 0) + (p.low_risk_count or 0)
-        if total > 0:
-            weekly[week_key].append(
-                ((p.high_risk_count or 0) + (p.critical_risk_count or 0)) / total * 100
-            )
-
-    trends = [
-        {
-            "week":       week,
-            "historical": round(sum(scores) / len(scores), 1) if scores else 0,
-            "predicted":  round(sum(scores) / len(scores) * 1.05, 1) if scores else 0,
-        }
-        for week, scores in list(weekly.items())[-weeks:]
-    ]
-    return {"trends": trends}
+async def risk_probability_trends(weeks: int = 6):
+    """Weekly national risk: observed-weather history and forecast-weather prediction."""
+    weeks = max(1, min(weeks, 8))
+    return {"trends": await engine.national_weekly(weeks=weeks)}
 
 
 # ── District dashboard ─────────────────────────────────────────────────────────
 
+def _district_actions(day: dict, district: str) -> list:
+    actions = []
+    if day["risk_level"] == "CRITICAL":
+        actions.append(f"URGENT: Escalate {district} to the Ministry of Health")
+    if day["risk_level"] in ("HIGH", "CRITICAL"):
+        actions.append(f"Deploy larvicide teams to breeding sites in {district}")
+        actions.append("Send SMS alerts to all registered community health workers")
+    if day["rainfall_mm"] >= 20 or day["soil_moisture"] >= 0.6:
+        actions.append("Inspect and drain standing water after recent rainfall")
+    if day["humidity_pct"] >= 80:
+        actions.append("Reinforce bed-net use — humidity favours mosquito activity")
+    if not actions:
+        actions.append("Maintain routine prevention and surveillance")
+    return actions
+
+
 @router.get("/district/{district_name}")
 async def district_dashboard(district_name: str, db: AsyncSession = Depends(get_db)):
-    """
-    Screen 3 — District dashboard main card + sector heatmap + 30-day forecast.
-    """
-    result = await db.execute(
-        select(RiskZone).where(RiskZone.district == district_name)
-    )
-    zones = result.scalars().all()
+    """District dashboard: today's risk, environmental drivers and a 30-day risk series."""
+    district = _district_or_404(district_name)
+    await ensure_fresh(db)
+    day = await engine.district_today(district)
+    if not day:
+        raise HTTPException(status_code=503, detail="No prediction data available yet")
 
-    if not zones:
-        # Run live prediction for this district
-        live = await predictor.predict(
-            region=district_name,
-            prediction_date=datetime.utcnow(),
-        )
-        district_risk_score = round(
-            sum(z.risk_score for z in live.all_zones) / len(live.all_zones) * 100
-        ) if live.all_zones else 50
-        risk_level = "HIGH" if district_risk_score > 65 else "MODERATE" if district_risk_score > 35 else "LOW"
-        sector_heatmap = []
-    else:
-        scores         = [z.risk_score for z in zones]
-        district_risk_score = round(sum(scores) / len(scores) * 100)
-        risk_level     = zones[0].risk_level if zones else "MODERATE"
-        sector_heatmap = [
-            {
-                "sector":     z.site_name,
-                "risk_score": round(z.risk_score * 100),
-                "risk_level": z.risk_level,
-                "lat":        z.latitude,
-                "lon":        z.longitude,
-            }
-            for z in sorted(zones, key=lambda x: -x.risk_score)
-        ]
-
-    # 30-day history from ZoneHistory
-    history_result = await db.execute(
-        select(ZoneHistory)
-        .join(RiskZone, ZoneHistory.zone_id == RiskZone.id)
-        .where(RiskZone.district == district_name)
-        .where(ZoneHistory.recorded_at >= datetime.utcnow() - timedelta(days=30))
-        .order_by(ZoneHistory.recorded_at.asc())
-    )
-    history = history_result.scalars().all()
-
-    forecast_30day = [
-        {
-            "date":              h.recorded_at.strftime("%b %d"),
-            "humidity_index":    round((h.risk_score or 0.5) * 80 + 20),
-            "temperature_factor": round((h.risk_score or 0.5) * 35 + 15),
-            "satellite_pooling": round((h.risk_score or 0.5) * 60),
-        }
-        for h in history[-30:]
-    ]
+    series = await engine.series(district, past=14, ahead=16)
+    today_iso = day["date"]
+    ahead = [d for d in series if d["date"] > today_iso][:7]
 
     return {
-        "district":         district_name,
-        "risk_score":       district_risk_score,
-        "risk_level":       risk_level,
-        "risk_change_pct":  _calculate_risk_change(history),
-        "temperature_c":    zones[0].temperature_c if zones and zones[0].temperature_c else 28,
-        "humidity_pct":     zones[0].humidity_pct  if zones and zones[0].humidity_pct  else 75,
-        "active_hotspots":  sum(1 for z in zones if z.risk_level in ("HIGH", "CRITICAL")),
-        "sector_heatmap":   sector_heatmap,
-        "forecast_30day":   forecast_30day,
-        "recommended_actions": _get_district_actions(risk_level, district_name),
-        "last_updated":     datetime.utcnow().isoformat(),
+        "district":        district,
+        "province":        DISTRICT_INFO[district]["province"],
+        "risk_score":      _pct(day["risk_score"]),
+        "risk_level":      day["risk_level"],
+        "risk_change_pts": await engine.risk_change_pts(district),
+        "temperature_c":   round(day["temperature_c"], 1),
+        "humidity_pct":    round(day["humidity_pct"]),
+        "rainfall_mm":     round(day["rainfall_mm"], 1),
+        "soil_moisture":   round(day["soil_moisture"], 2),
+        "standing_water_index": round(day["standing_water_km2"], 2),
+        "flood_risk_index": round(day["flood_risk_index"], 2),
+        "confidence":      round(day["confidence"] * 100),
+        "high_risk_days_ahead": sum(1 for d in ahead if d["risk_level"] in ("HIGH", "CRITICAL")),
+        "forecast_30day": [
+            {
+                "date":          d["date"],
+                "risk_score":    _pct(d["risk_score"]),
+                "rainfall_mm":   round(d["rainfall_mm"], 1),
+                "humidity_pct":  round(d["humidity_pct"]),
+                "temperature_c": round(d["temperature_c"], 1),
+                "is_forecast":   d["date"] > today_iso,
+            }
+            for d in series
+        ],
+        "recommended_actions": _district_actions(day, district),
+        "model_version":   predictor.model_version,
+        "last_updated":    _iso_utc(engine.fetched_at),
     }
 
 
@@ -305,122 +248,129 @@ async def district_dashboard(district_name: str, db: AsyncSession = Depends(get_
 
 @router.get("/districts/")
 async def list_all_districts(db: AsyncSession = Depends(get_db)):
-    """
-    Screen 7 — District List table.
-    Returns all 30 districts with current risk and 7-day trend.
-    """
-    result = await db.execute(select(RiskZone))
-    zones  = result.scalars().all()
-    district_data = predictor.aggregate_to_district(zones) if zones else {}
+    """District list: all 30 districts with today's risk and the real 7-day trend."""
+    await ensure_fresh(db)
+    today = await engine.today()
+    if not today:
+        raise HTTPException(status_code=503, detail="No prediction data available yet")
 
-    # Fallback: return Rwanda's 30 districts with demo data if DB empty
-    if not district_data:
-        from scripts.build_static_features import DISTRICT_STATIC
-        return [
-            {
-                "district":    d["district"],
-                "province":    _get_province(d["district"]),
-                "current_risk": round(d["flood_risk_base"] * 100),
-                "risk_level":  "HIGH" if d["flood_risk_base"] > 0.65 else "MODERATE" if d["flood_risk_base"] > 0.35 else "LOW",
-                "trend_7day":  _demo_trend(d["flood_risk_base"]),
-            }
-            for d in DISTRICT_STATIC
-        ]
-
-    trend_by_district = await _compute_district_trends(db)
-
-    return [
-        {
-            "district":    name,
-            "province":    _get_province(name),
-            "current_risk": round(d["risk_score"] * 100),
-            "risk_level":  d["risk_level"],
-            "high_cells":  d["high_cell_count"],
-            "total_cells": d["total_cells"],
-            "trend_7day":  trend_by_district.get(name, "Stable"),
-        }
-        for name, d in sorted(district_data.items(), key=lambda x: -x[1]["risk_score"])
-    ]
+    out = []
+    for name, day in sorted(today.items(), key=lambda x: -x[1]["risk_score"]):
+        out.append({
+            "district":     name,
+            "province":     DISTRICT_INFO[name]["province"],
+            "current_risk": _pct(day["risk_score"]),
+            "risk_level":   day["risk_level"],
+            "trend_7day":   await engine.trend_label(name),
+        })
+    return out
 
 
 # ── Community worker / zone ────────────────────────────────────────────────────
 
+def _weather_warning(day: dict, ahead: list) -> str:
+    wet = [d for d in ahead[:3] if d["rainfall_mm"] >= 10]
+    if wet:
+        total = sum(d["rainfall_mm"] for d in ahead[:3])
+        return (f"Rain forecast in the next 3 days ({total:.0f} mm total). "
+                "Check for stagnant water accumulation and close open water logs.")
+    if day["rainfall_mm"] >= 20:
+        return f"Heavy rainfall recorded today ({day['rainfall_mm']:.0f} mm). Check for stagnant water."
+    if day["humidity_pct"] >= 85:
+        return "Very high humidity. Mosquito activity is elevated — enforce net use tonight."
+    return "No significant weather threat in the next 3 days. Standard prevention protocols apply."
+
+
 @router.get("/zone/{zone_id}")
 async def zone_prediction(zone_id: str, db: AsyncSession = Depends(get_db)):
-    """
-    Screen 4 — Community Worker dashboard village risk card.
-    """
+    """Community worker dashboard: risk for a zone (a district cell) with a weather warning."""
     zone = await db.get(RiskZone, zone_id)
     if not zone:
-        return {
-            "zone_id":          zone_id,
-            "village_risk":     65,
-            "risk_level":       "HIGH",
-            "risk_change_pct":  8,
-            "weather_warning":  "Heavy rain expected in the next 48 hours.",
-            "today_goals": [
-                {"task": "Contact 12 Village Leaders", "completed": True},
-                {"task": "Distribute SMS Alert",       "completed": False},
-            ],
-        }
+        raise HTTPException(status_code=404, detail="Zone not found")
+
+    day = await engine.district_today(zone.district)
+    if not day:
+        raise HTTPException(status_code=503, detail="No prediction data available yet")
+    series = await engine.series(zone.district, past=0, ahead=5)
+    ahead = [d for d in series if d["date"] > day["date"]]
+
+    tasks = ["Check stagnant water sites", "Send community SMS broadcast", "Log field observations"]
+    if day["risk_level"] in ("HIGH", "CRITICAL"):
+        tasks.insert(0, "Visit the highest-risk breeding sites today")
 
     return {
         "zone_id":         zone_id,
         "site_name":       zone.site_name,
-        "village_risk":    round(zone.risk_score * 100),
-        "risk_level":      zone.risk_level,
-        "rainfall_mm":     zone.rainfall_mm,
-        "humidity_pct":    zone.humidity_pct,
-        "temperature_c":   zone.temperature_c,
-        "last_updated":    zone.updated_at.isoformat() if zone.updated_at else None,
-        "today_goals": [
-            {"task": "Check stagnant water sites",    "completed": False},
-            {"task": "Send community SMS broadcast",  "completed": False},
-            {"task": "Log field observations",        "completed": False},
-        ],
-        "weather_warning": _get_weather_warning(zone),
+        "district":        zone.district,
+        "village_risk":    _pct(day["risk_score"]),
+        "risk_level":      day["risk_level"],
+        "risk_change_pts": await engine.risk_change_pts(zone.district),
+        "rainfall_mm":     round(day["rainfall_mm"], 1),
+        "humidity_pct":    round(day["humidity_pct"]),
+        "temperature_c":   round(day["temperature_c"], 1),
+        "last_updated":    _iso_utc(engine.fetched_at),
+        "today_goals":     [{"task": t, "completed": False} for t in tasks],
+        "weather_warning": _weather_warning(day, ahead),
     }
 
 
 # ── Public portal ──────────────────────────────────────────────────────────────
 
-@router.get("/public/{district_name}")
-async def public_district_risk(district_name: str, db: AsyncSession = Depends(get_db)):
-    """
-    Screen 5 — Public portal district risk card. No auth required.
-    """
-    result = await db.execute(
-        select(RiskZone)
-        .where(RiskZone.district == district_name)
-        .order_by(RiskZone.risk_score.desc())
-        .limit(1)
-    )
-    top_zone = result.scalar_one_or_none()
+def _prevention(level: str) -> list:
+    urgent = level in ("HIGH", "CRITICAL")
+    return [
+        {"action": "Use Bed Nets",  "priority": "Priority" if urgent else "Recommended",
+         "detail": "Ensure all family members sleep under insecticide-treated nets."},
+        {"action": "Clear Water",   "priority": "High" if urgent else "Recommended",
+         "detail": "Empty containers and clear stagnant water around your dwelling."},
+        {"action": "Close Windows", "priority": "Daily",
+         "detail": "Keep windows and doors closed or screened after 6:00 PM."},
+        {"action": "Seek Care",     "priority": "Health",
+         "detail": "Visit your community health worker immediately if you develop a sudden fever."},
+    ]
 
-    risk_score = round((top_zone.risk_score if top_zone else 0.65) * 100)
-    risk_level = (
-        "CRITICAL" if risk_score >= 80 else
-        "HIGH"     if risk_score >= 65 else
-        "MODERATE" if risk_score >= 35 else "LOW"
-    )
+
+def _stage(score: int) -> str:
+    if score >= 80: return "Critical"
+    if score >= 65: return "Acceleration"
+    if score >= 35: return "Elevation"
+    return "Baseline"
+
+
+@router.get("/public/{district_name}")
+async def public_district_risk(district_name: str):
+    """Public portal district risk card. No auth required."""
+    district = _district_or_404(district_name)
+    day = await engine.district_today(district)
+    if not day:
+        raise HTTPException(status_code=503, detail="No prediction data available yet")
+
+    score = _pct(day["risk_score"])
+    series = await engine.series(district, past=0, ahead=3)
+    ahead = [d for d in series if d["date"] > day["date"]]
+    change = await engine.risk_change_pts(district)
+    direction = "up" if change > 0 else "down" if change < 0 else "unchanged"
+    delta = f" {abs(change):.0f} points" if change else ""
 
     return {
-        "district":           district_name,
-        "risk_score":         risk_score,
-        "risk_level":         risk_level,
-        "transmission_stage": _get_transmission_stage(risk_score),
-        "confidence_score":   round((top_zone.risk_score if top_zone else 0.89) * 100),
+        "district":           district,
+        "risk_score":         score,
+        "risk_level":         day["risk_level"],
+        "transmission_stage": _stage(score),
+        "confidence_score":   round(day["confidence"] * 100),
         "weather": {
-            "temperature_c": top_zone.temperature_c if top_zone else 24,
-            "humidity_pct":  top_zone.humidity_pct  if top_zone else 78,
+            "temperature_c": round(day["temperature_c"], 1),
+            "humidity_pct":  round(day["humidity_pct"]),
         },
-        "recommended_prevention": [
-            {"action": "Use Bed Nets",    "priority": "Priority",    "detail": "Ensure all family members sleep under insecticide-treated nets"},
-            {"action": "Clear Water",     "priority": "Recommended", "detail": "Empty containers and clear stagnant water around your dwelling"},
-            {"action": "Close Windows",   "priority": "Daily",       "detail": "Keep windows and doors closed or screened after 6:00 PM"},
-            {"action": "Seek Care",       "priority": "Health",      "detail": "Visit your CHW immediately if you develop a sudden fever"},
-        ],
-        "updated_at": datetime.utcnow().isoformat(),
+        "rainfall_mm": round(day["rainfall_mm"], 1),
+        "summary": (
+            f"Malaria breeding risk in {district} is {day['risk_level']} ({score}/100), "
+            f"{direction}{delta} versus a week ago. "
+            f"Today: {day['rainfall_mm']:.1f} mm rain, {day['humidity_pct']:.0f}% humidity."
+        ),
+        "weather_note": _weather_warning(day, ahead),
+        "recommended_prevention": _prevention(day["risk_level"]),
+        "updated_at": _iso_utc(engine.fetched_at),
     }
 
 
@@ -434,7 +384,6 @@ async def prediction_history(days: int = 7, db: AsyncSession = Depends(get_db)):
         .where(Prediction.created_at >= cutoff)
         .order_by(Prediction.created_at.desc())
     )
-    preds = result.scalars().all()
     return [
         {
             "id":             str(p.id),
@@ -446,7 +395,7 @@ async def prediction_history(days: int = 7, db: AsyncSession = Depends(get_db)):
             "model_version":  p.model_version,
             "created_at":     p.created_at,
         }
-        for p in preds
+        for p in result.scalars().all()
     ]
 
 
@@ -459,123 +408,10 @@ async def live_coordinate_prediction(
     ndvi: float = 0.4,
     river_distance_m: float = 500,
 ):
-    """Single coordinate live prediction — used by public map clicks."""
-    weather    = get_weather(lat, lon)
+    """Single coordinate live prediction from real Open-Meteo weather."""
+    try:
+        weather = await asyncio.to_thread(get_weather, lat, lon)
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"Live weather unavailable: {exc}")
     prediction = predictor.predict_risk(weather=weather, ndvi=ndvi, river_distance=river_distance_m)
     return {"latitude": lat, "longitude": lon, "weather": weather, **prediction}
-
-
-# ── Private helpers ────────────────────────────────────────────────────────────
-
-def _estimate_population_at_risk(district_data: dict) -> int:
-    DISTRICT_POP = {
-        "Bugesera": 632000, "Gasabo": 745000, "Kicukiro": 520000,
-        "Nyarugenge": 350000, "Kayonza": 425000, "Kirehe": 380000,
-        "Burera": 340000, "Musanze": 480000, "Rubavu": 510000,
-    }
-    total = 0
-    for name, d in district_data.items():
-        if d["risk_level"] in ("HIGH", "CRITICAL"):
-            total += DISTRICT_POP.get(name, 300000)
-    return total
-
-
-def _infer_hazard_type(d: dict) -> str:
-    if d["risk_score"] > 0.75:
-        return "Malaria"
-    elif d.get("pct_high_risk", 0) > 40:
-        return "Floods"
-    return "Malaria"
-
-
-def _calculate_risk_change(history: list) -> float:
-    if len(history) < 2:
-        return 0.0
-    recent = history[-1].risk_score or 0
-    older  = history[0].risk_score  or 0
-    if older == 0:
-        return 0.0
-    return round((recent - older) / older * 100, 1)
-
-
-def _get_district_actions(risk_level: str, district: str) -> list:
-    base = [
-        f"Deploy larvicide teams to high-risk sectors in {district}",
-        "Send SMS alerts to all registered Abajyanama b'ubuzima",
-        "Coordinate with district health office for resource deployment",
-    ]
-    if risk_level == "CRITICAL":
-        base.insert(0, f"URGENT: Escalate {district} to Ministry of Health immediately")
-    return base
-
-
-def _get_weather_warning(zone) -> str:
-    if zone.rainfall_mm and zone.rainfall_mm > 50:
-        return f"Heavy rainfall detected ({zone.rainfall_mm:.0f}mm). Check for stagnant water accumulation."
-    if zone.humidity_pct and zone.humidity_pct > 85:
-        return "Very high humidity. Mosquito activity elevated — enforce net use tonight."
-    return "Monitor conditions. Standard prevention protocols active."
-
-
-def _get_transmission_stage(risk_score: int) -> str:
-    if risk_score >= 80: return "Critical"
-    if risk_score >= 65: return "Acceleration"
-    if risk_score >= 35: return "Elevation"
-    return "Baseline"
-
-
-def _demo_trend(risk_base: float) -> str:
-    """Plausible trend label when there's no ZoneHistory yet to compute a real one from."""
-    if risk_base > 0.6:
-        return "Increasing"
-    if risk_base < 0.3:
-        return "Decreasing"
-    return "Stable"
-
-
-async def _compute_district_trends(db: AsyncSession) -> dict:
-    """
-    Compares each district's earliest vs. latest risk_score in ZoneHistory over
-    the last 7 days to produce a real 'Increasing' / 'Stable' / 'Decreasing'
-    label, instead of a value hardcoded the same for every district.
-    """
-    cutoff = datetime.utcnow() - timedelta(days=7)
-    result = await db.execute(
-        select(RiskZone.district, ZoneHistory.risk_score, ZoneHistory.recorded_at)
-        .join(RiskZone, ZoneHistory.zone_id == RiskZone.id)
-        .where(ZoneHistory.recorded_at >= cutoff)
-        .order_by(ZoneHistory.recorded_at.asc())
-    )
-
-    scores_by_district: dict = {}
-    for district, score, _recorded_at in result.all():
-        scores_by_district.setdefault(district, []).append(score or 0)
-
-    trends = {}
-    for district, scores in scores_by_district.items():
-        if len(scores) < 2 or scores[0] == 0:
-            continue
-        pct_change = (scores[-1] - scores[0]) / scores[0] * 100
-        if pct_change > 3:
-            trends[district] = "Increasing"
-        elif pct_change < -3:
-            trends[district] = "Decreasing"
-        else:
-            trends[district] = "Stable"
-    return trends
-
-
-def _get_province(district: str) -> str:
-    PROVINCES = {
-        "Bugesera": "Eastern", "Gatsibo": "Eastern", "Kayonza": "Eastern",
-        "Kirehe": "Eastern", "Ngoma": "Eastern", "Nyagatare": "Eastern",
-        "Rwamagana": "Eastern", "Huye": "Southern", "Gisagara": "Southern",
-        "Kamonyi": "Southern", "Muhanga": "Southern", "Nyamagabe": "Southern",
-        "Nyaruguru": "Southern", "Nyanza": "Southern", "Ruhango": "Southern",
-        "Gakenke": "Northern", "Gicumbi": "Northern", "Burera": "Northern",
-        "Musanze": "Northern", "Ngororero": "Western", "Nyabihu": "Western",
-        "Rubavu": "Western", "Rulindo": "Northern", "Karongi": "Western",
-        "Nyarugenge": "Kigali", "Gasabo": "Kigali", "Kicukiro": "Kigali",
-        "Rusizi": "Western", "Rutsiro": "Western", "Nyamasheke": "Western",
-    }
-    return PROVINCES.get(district, "Rwanda")
