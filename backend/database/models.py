@@ -143,6 +143,7 @@ class TreatmentRecord(Base):
     larvae_count_before = Column(Integer, nullable=True)
     larvae_count_after  = Column(Integer, nullable=True)
     notes               = Column(Text)
+    district            = Column(String(200), nullable=True, index=True)
     treated_at          = Column(DateTime, default=datetime.utcnow)
     logged_by           = Column(UUID(as_uuid=False), ForeignKey("users.id"))
 
@@ -254,4 +255,15 @@ class ContactMessage(Base):
     organization = Column(String(200), nullable=True)
     subject    = Column(String(200), nullable=True)
     message    = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class OtpCode(Base):
+    """One pending phone-login code per number (stored hashed, never in plain text)."""
+    __tablename__ = "otp_codes"
+    id         = Column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    phone      = Column(String(20), nullable=False, index=True)
+    code_hash  = Column(String(128), nullable=False)
+    attempts   = Column(Integer, default=0, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
