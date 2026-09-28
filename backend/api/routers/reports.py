@@ -13,7 +13,8 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_pipeline.rwanda_districts import DISTRICT_INFO, DISTRICT_NAMES, canonical_district
-from database.models import Alert, SmsLog, TreatmentRecord
+from api.dependencies import get_current_user
+from database.models import Alert, SmsLog, TreatmentRecord, User
 from database.session import get_db
 from ml.feature_extractor import PAST_DAYS, kigali_today
 from ml.runtime import engine, predictor
@@ -32,6 +33,7 @@ async def report_summary(
     end: Optional[date] = None,
     districts: str = "",
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     today = kigali_today()
     earliest = today - timedelta(days=PAST_DAYS)
