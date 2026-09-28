@@ -18,6 +18,8 @@ from ml.runtime import engine, predictor
 
 STALE_AFTER = timedelta(hours=1)
 _refresh_lock = asyncio.Lock()
+LEVEL_ORDER = {"LOW": 0, "MODERATE": 1, "HIGH": 2, "CRITICAL": 3}
+OPEN_STATUSES = ("active", "acknowledged")
 
 
 def _reason(day: dict) -> str:
@@ -71,24 +73,33 @@ async def refresh_predictions(db: AsyncSession, force_weather: bool = False) -> 
             zones.append((zone, day))
         await db.flush()
 
-        new_alerts, to_notify = 0, []
-        day_ago = now - timedelta(hours=24)
+        # Model-generated alerts: one open alert per district. A new alert is
+        # raised when a district reaches HIGH/CRITICAL (or escalates from HIGH
+        # to CRITICAL); open alerts resolve themselves once risk drops below HIGH.
+        new_alerts, resolved_alerts, to_notify = 0, 0, []
         for zone, day in zones:
             db.add(ZoneHistory(zone_id=zone.id, risk_score=zone.risk_score,
                                risk_level=zone.risk_level, rainfall_mm=zone.rainfall_mm,
                                recorded_at=now))
-            if day["risk_level"] in ("HIGH", "CRITICAL"):
-                recent = (await db.execute(
-                    select(func.count()).select_from(Alert).where(
-                        Alert.zone_id == zone.id, Alert.status == "active",
-                        Alert.created_at >= day_ago)
-                )).scalar_one()
-                if not recent:
-                    db.add(Alert(zone_id=zone.id, risk_level=day["risk_level"],
+            open_alerts = (await db.execute(
+                select(Alert).where(Alert.zone_id == zone.id, Alert.status.in_(OPEN_STATUSES))
+            )).scalars().all()
+            level = day["risk_level"]
+            if LEVEL_ORDER[level] >= LEVEL_ORDER["HIGH"]:
+                highest_open = max((LEVEL_ORDER.get(a.risk_level, 0) for a in open_alerts), default=-1)
+                if LEVEL_ORDER[level] > highest_open:
+                    db.add(Alert(zone_id=zone.id, risk_level=level,
                                  region=zone.district, site_name=zone.site_name,
                                  trigger_reason=_reason(day), status="active"))
                     new_alerts += 1
                     to_notify.append((zone.district, day))
+            else:
+                for a in open_alerts:
+                    a.status = "resolved"
+                    a.resolved_at = now
+                    a.response_notes = (a.response_notes + " | " if a.response_notes else "") + \
+                        f"Auto-resolved: model risk fell to {level} ({round(day['risk_score'] * 100)}/100)."
+                    resolved_alerts += 1
 
         avg_conf = sum(confidences) / len(confidences) if confidences else 0.0
         db.add(Prediction(region="Rwanda", prediction_date=now, critical_risk_count=counts["CRITICAL"],
@@ -99,7 +110,7 @@ async def refresh_predictions(db: AsyncSession, force_weather: bool = False) -> 
             event_type="prediction_run",
             description=(f"Prediction cycle on live Open-Meteo weather: {counts['CRITICAL']} critical, "
                          f"{counts['HIGH']} high, {counts['MODERATE']} moderate, {counts['LOW']} low "
-                         f"districts; {new_alerts} new alert(s)."),
+                         f"districts; {new_alerts} new alert(s), {resolved_alerts} auto-resolved."),
         ))
         await db.commit()
         for district, day in to_notify:
@@ -113,7 +124,8 @@ async def refresh_predictions(db: AsyncSession, force_weather: bool = False) -> 
             except Exception as exc:  # SMS is best-effort; never fail a prediction run
                 logger.warning(f"Subscriber SMS for {district} failed: {exc}")
         logger.info(f"Predictions refreshed: {counts}, {new_alerts} new alerts")
-        return {"counts": counts, "new_alerts": new_alerts, "districts": len(zones),
+        return {"counts": counts, "new_alerts": new_alerts, "resolved_alerts": resolved_alerts,
+                "districts": len(zones),
                 "confidence": round(avg_conf, 4), "model_version": predictor.model_version}
 
 
