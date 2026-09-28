@@ -10,13 +10,15 @@ randomly generated; if a district has no data the API says so (404/503).
 import asyncio
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_pipeline.open_meteo_service import get_weather
 from data_pipeline.rwanda_districts import DISTRICT_INFO, canonical_district
-from database.models import Alert, Prediction, RiskZone
+from api import rate_limit
+from api.dependencies import get_current_user
+from database.models import Alert, Prediction, RiskZone, User
 from database.session import get_db
 from ml.refresh import ensure_fresh, refresh_predictions
 from ml.runtime import engine, predictor
@@ -42,8 +44,10 @@ def _district_or_404(name: str) -> str:
 # ── Core prediction runner ─────────────────────────────────────────────────────
 
 @router.post("/predict")
-async def run_prediction(region: str = "Rwanda", db: AsyncSession = Depends(get_db)):
+async def run_prediction(request: Request, region: str = "Rwanda", db: AsyncSession = Depends(get_db),
+                         current_user: User = Depends(get_current_user)):
     """Re-fetch live weather, run the model for all 30 districts and persist results."""
+    rate_limit.limit(request, "predict", limit=6, window_seconds=600)
     summary = await refresh_predictions(db, force_weather=True)
     today = await engine.today()
     ranked = sorted(today.values(), key=lambda d: -d["risk_score"])
