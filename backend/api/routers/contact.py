@@ -1,9 +1,10 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api import rate_limit
 from database.models import ContactMessage
 from database.session import get_db
 
@@ -19,8 +20,9 @@ class ContactRequest(BaseModel):
 
 
 @router.post("/")
-async def submit_contact(payload: ContactRequest, db: AsyncSession = Depends(get_db)):
+async def submit_contact(payload: ContactRequest, request: Request, db: AsyncSession = Depends(get_db)):
     """Public Contact form — stored so the team can follow up."""
+    rate_limit.limit(request, "contact", limit=5, window_seconds=3600)
     db.add(ContactMessage(name=payload.name, email=payload.email, organization=payload.organization,
                           subject=payload.subject, message=payload.message))
     await db.commit()
