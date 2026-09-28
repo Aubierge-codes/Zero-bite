@@ -41,3 +41,16 @@ async def require_admin(current_user: User = Depends(get_current_user)) -> User:
             detail="Admin or health official role required",
         )
     return current_user
+
+
+# Staff who may coordinate responses (compose alerts, manage field teams).
+COORDINATOR_ROLES = ("admin", "health_official", "ministry", "district_officer")
+
+
+async def require_coordinator(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role not in COORDINATOR_ROLES:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Ministry, district officer or admin role required",
+        )
+    return current_user
