@@ -1,21 +1,31 @@
+from sqlalchemy import inspect
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from database.models import Base
 from api.config import get_settings
 
 settings = get_settings()
 
-db_url = settings.DATABASE_URL
 
-# SQLite needs check_same_thread=False
-connect_args = {}
+def _async_url(url: str) -> str:
+    """Accept plain postgres:// URLs (as given by most hosts) and use the asyncpg driver."""
+    if url.startswith("postgres://"):
+        return "postgresql+asyncpg://" + url[len("postgres://"):]
+    if url.startswith("postgresql://"):
+        return "postgresql+asyncpg://" + url[len("postgresql://"):]
+    return url
+
+
+db_url = _async_url(settings.DATABASE_URL)
+
 if db_url.startswith("sqlite"):
-    connect_args = {"check_same_thread": False}
-    engine = create_async_engine(db_url, connect_args=connect_args, echo=False)
+    # SQLite needs check_same_thread=False
+    engine = create_async_engine(db_url, connect_args={"check_same_thread": False}, echo=False)
 else:
     engine = create_async_engine(
         db_url,
         pool_size=settings.DATABASE_POOL_SIZE,
         max_overflow=settings.DATABASE_MAX_OVERFLOW,
+        pool_pre_ping=True,
         echo=False,
     )
 
@@ -25,16 +35,29 @@ AsyncSessionLocal = async_sessionmaker(
     expire_on_commit=False,
 )
 
+# Columns added after the first release. create_all() never alters existing
+# tables, so they are added here for databases created by an older version.
+_ADDED_COLUMNS = [
+    ("users", "district", "VARCHAR(200)"),
+    ("treatment_records", "district", "VARCHAR(200)"),
+]
+
+
+def _missing_columns(sync_conn):
+    insp = inspect(sync_conn)
+    tables = set(insp.get_table_names())
+    missing = []
+    for table, column, ddl in _ADDED_COLUMNS:
+        if table in tables and column not in {c["name"] for c in insp.get_columns(table)}:
+            missing.append((table, column, ddl))
+    return missing
+
 
 async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-        # create_all never alters existing tables: add columns introduced after a
-        # dev database was first created.
-        if db_url.startswith("sqlite"):
-            cols = {row[1] for row in (await conn.exec_driver_sql("PRAGMA table_info(users)")).fetchall()}
-            if "district" not in cols:
-                await conn.exec_driver_sql("ALTER TABLE users ADD COLUMN district VARCHAR(200)")
+        for table, column, ddl in await conn.run_sync(_missing_columns):
+            await conn.exec_driver_sql(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}")
 
 
 async def get_db():
