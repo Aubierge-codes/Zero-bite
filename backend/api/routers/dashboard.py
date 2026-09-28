@@ -7,12 +7,14 @@ from database.session import get_db
 from database.models import Alert, RiskZone, FieldTeam, Prediction, ActivityLog, TreatmentRecord
 from ml.refresh import ensure_fresh
 from ml.runtime import predictor
+from api.dependencies import get_current_user, require_admin
+from database.models import User
 
 router = APIRouter()
 
 
 @router.get("/stats")
-async def dashboard_stats(db: AsyncSession = Depends(get_db)):
+async def dashboard_stats(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     await ensure_fresh(db)
     now = datetime.utcnow()
     day_ago = now - timedelta(days=1)
@@ -47,6 +49,7 @@ async def dashboard_stats(db: AsyncSession = Depends(get_db)):
         },
         "alerts": {
             "active_24h": len(active_alerts),
+            "critical": sum(1 for a in active_alerts if a.risk_level == "CRITICAL"),
             "high": sum(1 for a in active_alerts if a.risk_level == "HIGH"),
             "moderate": sum(1 for a in active_alerts if a.risk_level == "MODERATE"),
         },
@@ -65,7 +68,8 @@ async def dashboard_stats(db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/activity-log")
-async def activity_log(limit: int = 20, db: AsyncSession = Depends(get_db)):
+async def activity_log(limit: int = 20, db: AsyncSession = Depends(get_db),
+                       current_user: User = Depends(require_admin)):
     result = await db.execute(
         select(ActivityLog).order_by(ActivityLog.created_at.desc()).limit(limit)
     )
