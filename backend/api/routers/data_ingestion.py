@@ -7,7 +7,8 @@ from database.models import IngestionJob, EnvironmentalFeatures, User
 from data_pipeline.open_meteo_service import OpenMeteoError, get_weather
 from api.dependencies import require_admin
 
-router = APIRouter()
+# Operational/diagnostic tools: administrators only.
+router = APIRouter(dependencies=[Depends(require_admin)])
 
 
 @router.get("/status")
@@ -80,6 +81,7 @@ async def ndvi(
 
 @router.post("/maps/demo")
 async def create_demo_map():
+    """Writes an example Leafmap HTML file on the server (diagnostic only)."""
     try:
         from data_pipeline.map_visualizer import save_demo_map
 
