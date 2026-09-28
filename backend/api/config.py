@@ -7,10 +7,27 @@ class Settings(BaseSettings):
 
     # ── App ───────────────────────────────────────────────────────────────────
     APP_NAME:   str  = "Zero_Bite"
-    APP_ENV:    str  = "development"
+    APP_ENV:    str  = "development"     # development | staging | production
     DEBUG:      bool = True
     SECRET_KEY: str  = "change-me"
     API_VERSION: str = "v1"
+
+    # Interactive API docs (/docs, /redoc). Off by default in production.
+    ENABLE_DOCS: Optional[bool] = None
+
+    # Run the in-process scheduler (hourly prediction refresh + stale-alert
+    # cleanup). Enable it on exactly ONE API process/container.
+    RUN_SCHEDULER: bool = True
+
+    # Set true only when the API is reachable exclusively through the bundled
+    # nginx proxy (it sets X-Real-IP); used for per-client rate limiting.
+    TRUST_PROXY_HEADERS: bool = False
+    REFRESH_INTERVAL_MINUTES: int = 60
+
+    # Auth
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 8
+    OTP_EXPIRE_MINUTES: int = 10
+    OTP_MAX_ATTEMPTS: int = 5
 
     # ── CORS ──────────────────────────────────────────────────────────────────
     # Comma-separated list of allowed origins. Defaults cover the Vite dev
@@ -43,6 +60,8 @@ class Settings(BaseSettings):
     AFRICASTALKING_API_KEY:  Optional[str] = None
     AFRICASTALKING_USERNAME: Optional[str] = None
     AT_SENDER_ID:            str = "ZeroBite"
+    # Shared secret appended to the incoming-SMS callback URL (?token=...)
+    SMS_WEBHOOK_TOKEN:       Optional[str] = None
 
     # ── Email ─────────────────────────────────────────────────────────────────
     SENDGRID_API_KEY: Optional[str] = None
@@ -86,6 +105,29 @@ class Settings(BaseSettings):
     @property
     def cors_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+
+    @property
+    def is_production(self) -> bool:
+        return self.APP_ENV.lower() == "production"
+
+    @property
+    def docs_enabled(self) -> bool:
+        return self.ENABLE_DOCS if self.ENABLE_DOCS is not None else not self.is_production
+
+    def validate_for_production(self) -> None:
+        """Refuse to start a production API with unsafe settings."""
+        if not self.is_production:
+            return
+        problems = []
+        weak = {"change-me", "your-secret-key-change-in-production", ""}
+        if self.SECRET_KEY in weak or len(self.SECRET_KEY) < 32:
+            problems.append("SECRET_KEY must be a random string of at least 32 characters")
+        if self.DEBUG:
+            problems.append("DEBUG must be false")
+        if "*" in self.cors_origins_list:
+            problems.append("CORS_ORIGINS must list explicit origins, not '*'")
+        if problems:
+            raise RuntimeError("Unsafe production configuration: " + "; ".join(problems))
 
     class Config:
         env_file = ".env"
